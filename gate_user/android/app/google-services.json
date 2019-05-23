@@ -1,0 +1,69 @@
+{
+  "project_info": {
+    "project_number": "632191361398",
+    "firebase_url": "https://gate-8bb04.firebaseio.com",
+    "project_id": "gate-8bb04",
+    "storage_bucket": "gate-8bb04.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:632191361398:android:bd438187b7b041af",
+        "android_client_info": {
+          "package_name": "org.sahil.gupte.gate_entry"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "632191361398-h672i3omj454bik1h6rvpuj152gg5sb4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBK863BxuEKy7kK7Uubr83J9tpFvYA1lYw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "632191361398-h672i3omj454bik1h6rvpuj152gg5sb4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:632191361398:android:5d90b1f2f40a66a8",
+        "android_client_info": {
+          "package_name": "org.sahil.gupte.gate_user"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "632191361398-h672i3omj454bik1h6rvpuj152gg5sb4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBK863BxuEKy7kK7Uubr83J9tpFvYA1lYw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "632191361398-h672i3omj454bik1h6rvpuj152gg5sb4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
