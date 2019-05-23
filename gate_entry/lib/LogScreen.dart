@@ -41,16 +41,21 @@ class LogScreenState extends State<LogScreen> {
             ),
           ),
         ),
-        body: ListBuilder());
+        body: ListBuilder()
+    );
   }
 
   String getDateTime(String val) {
-    //print(val);
-    var date = new DateTime.fromMillisecondsSinceEpoch(int.parse(val));
-    //print(date);
-    var formatter = new DateFormat('HH:MM dd-MM-yyyy');
-    String formatted = formatter.format(date);
-    return formatted;
+    if (val == "null") {
+      return val;
+    } else {
+      //print(val);
+      var date = new DateTime.fromMillisecondsSinceEpoch(int.parse(val));
+      //print(date);
+      var formatter = new DateFormat('HH:MM dd-MM-yyyy');
+      String formatted = formatter.format(date);
+      return formatted;
+    }
   }
 
   Future<List<List<String>>> getValues() async {
@@ -78,6 +83,7 @@ class LogScreenState extends State<LogScreen> {
         });
       });
     });
+    print(exitTimeList);
     finalList.add(flatList);
     finalList.add(nameList);
     finalList.add(timeList);

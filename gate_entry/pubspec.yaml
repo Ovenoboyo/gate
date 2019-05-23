@@ -25,6 +25,7 @@ dependencies:
   cupertino_icons: ^0.1.2
   firebase_core: ^0.2.5
   firebase_database: ^1.0.3
+  firebase_messaging: ^2.0.0
   intl: ^0.15.8
 
 dev_dependencies:

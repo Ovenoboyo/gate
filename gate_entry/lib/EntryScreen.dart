@@ -1,6 +1,7 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 
 class EntryScreen extends StatefulWidget {
   @override
@@ -15,6 +16,60 @@ class EntryScreenState extends State<EntryScreen> {
   final TextEditingController controllerAddress0 = new TextEditingController();
   final TextEditingController controllerAddress1 = new TextEditingController();
   final databaseReference = FirebaseDatabase.instance.reference();
+  FirebaseMessaging firebaseMessaging = new FirebaseMessaging();
+
+  String _approval = "Waiting...";
+  var submitted = false;
+
+  var id = "1";
+
+  void fcmSubscribe() {
+    firebaseMessaging.subscribeToTopic(id);
+    print("Subscribed");
+  }
+
+  void fcmUnSubscribe() {
+    firebaseMessaging.unsubscribeFromTopic("entry_"+id);
+  }
+
+  void firebaseCloudMessaging_Listeners() async {
+    firebaseMessaging.getToken().then((token){
+      print(token);
+    });
+
+    firebaseMessaging.configure(
+        onMessage: (Map<String, dynamic> message) async {
+          print('on message $message');
+          var data = message['data'];
+          print(data['statusr']);
+          _approval = data['statusr'];
+          if (_approval == "Approved") {
+            addData(address);
+            Navigator.of(context).pop();
+            _showDialog(context);
+            await new Future.delayed(const Duration(seconds: 3));
+            Navigator.of(context).pop();
+            _approval = "Waiting...";
+            submitted = false;
+            fcmUnSubscribe();
+          } else if (_approval == "Denied") {
+            Navigator.of(context).pop();
+            _showDialog(context);
+            await new Future.delayed(const Duration(seconds: 3));
+            Navigator.of(context).pop();
+            _approval = "Waiting...";
+            submitted = false;
+            fcmUnSubscribe();
+          }
+        },
+        onResume: (Map<String, dynamic> message) async {
+          print('on resume $message');
+        },
+        onLaunch: (Map<String, dynamic> message) async {
+          print('on launch $message');
+        }
+    );
+  }
 
   void addPendingExit(String name, String address) {
     databaseReference
@@ -25,6 +80,31 @@ class EntryScreenState extends State<EntryScreen> {
       'Name': name,
     });
   }
+
+  void addPendingApproval(String name, String address) {
+    databaseReference
+        .child("PendingApproval")
+        .child("" + DateTime.now().millisecondsSinceEpoch.toString())
+        .child(address)
+        .set({
+      'Name': name,
+    });
+  }
+
+  void addNotificationRequest(String name, String address) {
+    String time = DateTime.now().millisecondsSinceEpoch.toString();
+    databaseReference
+        .child("notificationRequests").child("from")
+        .child("" + time)
+        .set({
+      'name': name,
+      'flat': address,
+      'time': time,
+      'entrynode': id
+    });
+  }
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -125,30 +205,57 @@ class EntryScreenState extends State<EntryScreen> {
     );
   }
 
-  bool onSubmit(String nameVal, String addressVal0, String addressVal1, BuildContext context) {
-    name = nameVal;
-    address = addressVal0 + "-" + addressVal1;
-    //print(name);
+  void addData(String address) {
     databaseReference
-        .child("FlatAssociates")
-        .once()
-        .then((DataSnapshot snapshot) {
-          if(snapshot.value != null) {
-            for (var data in snapshot.value.keys) {
-              if (address == data) {
-                databaseReference
-                    .child("Data").child(address).child("" + DateTime
-                    .now()
-                    .millisecondsSinceEpoch
-                    .toString()).set({'Name': name, 'Exit': "null"});
-                addPendingExit(name, address);
-                return true;
-              }
+        .child("Data").child(address).child("" + DateTime
+        .now()
+        .millisecondsSinceEpoch
+        .toString()).set({'Name': name, 'ExitTime': "null"});
+  }
+
+  bool onSubmit(String nameVal, String addressVal0, String addressVal1, BuildContext context) {
+    if (submitted) {
+      print("ongoing instance");
+      return false;
+    } else {
+      submitted = true;
+      name = nameVal;
+      address = addressVal0 + "-" + addressVal1;
+      //print(name);
+      databaseReference
+          .child("FlatAssociates")
+          .once()
+          .then((DataSnapshot snapshot) {
+        if (snapshot.value != null) {
+          for (var data in snapshot.value.keys) {
+            if (address == data) {
+              addPendingExit(name, address);
+              addNotificationRequest(name, address);
+              addPendingApproval(name, address);
+              _showDialog(context);
+              return true;
             }
           }
-          _showToast(context);
-    });
-    return false;
+        }
+        _showToast(context);
+      });
+      return false;
+    }
+  }
+
+  void _showDialog(BuildContext context) {
+    fcmSubscribe();
+    firebaseCloudMessaging_Listeners();
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: new Text("Awaiting Approval..."),
+          content: new Text('$_approval'),
+        );
+      },
+    );
   }
 
   void _showToast(BuildContext context) {
