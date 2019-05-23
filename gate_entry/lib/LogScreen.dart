@@ -64,7 +64,7 @@ class LogScreenState extends State<LogScreen> {
     nameList.clear();
     timeList.clear();
     exitTimeList.clear();
-    var data = await databaseReference.child("Data").once();
+    var data = await databaseReference.child("FlatAssociates").once();
     Map<dynamic, dynamic> map = data.value;
     map.forEach((key, value) {
       Map<dynamic, dynamic> map1 = value;

@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -18,10 +19,23 @@ class EntryScreenState extends State<EntryScreen> {
   final databaseReference = FirebaseDatabase.instance.reference();
   FirebaseMessaging firebaseMessaging = new FirebaseMessaging();
 
+  String time;
   String _approval = "Waiting...";
   var submitted = false;
+  final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
 
-  var id = "1";
+  var id;
+
+  @override
+  void initState() {
+    super.initState();
+    getUID();
+  }
+
+  Future<void> getUID() async {
+    final FirebaseUser user = await firebaseAuth.currentUser();
+    id = user.uid;
+  }
 
   void fcmSubscribe() {
     firebaseMessaging.subscribeToTopic(id);
@@ -84,11 +98,18 @@ class EntryScreenState extends State<EntryScreen> {
   void addPendingApproval(String name, String address) {
     databaseReference
         .child("PendingApproval")
-        .child("" + DateTime.now().millisecondsSinceEpoch.toString())
+        .child("" + time)
         .child(address)
         .set({
       'Name': name,
     });
+  }
+
+  void removePendingApproval() {
+    databaseReference
+        .child("PendingApproval")
+        .child("" + time)
+        .remove();
   }
 
   void addNotificationRequest(String name, String address) {
@@ -206,6 +227,8 @@ class EntryScreenState extends State<EntryScreen> {
   }
 
   void addData(String address) {
+    removePendingApproval();
+    addPendingExit(name, address);
     databaseReference
         .child("Data").child(address).child("" + DateTime
         .now()
@@ -214,6 +237,7 @@ class EntryScreenState extends State<EntryScreen> {
   }
 
   bool onSubmit(String nameVal, String addressVal0, String addressVal1, BuildContext context) {
+    time = DateTime.now().millisecondsSinceEpoch.toString();
     if (submitted) {
       print("ongoing instance");
       return false;
@@ -221,7 +245,6 @@ class EntryScreenState extends State<EntryScreen> {
       submitted = true;
       name = nameVal;
       address = addressVal0 + "-" + addressVal1;
-      //print(name);
       databaseReference
           .child("FlatAssociates")
           .once()
@@ -229,7 +252,6 @@ class EntryScreenState extends State<EntryScreen> {
         if (snapshot.value != null) {
           for (var data in snapshot.value.keys) {
             if (address == data) {
-              addPendingExit(name, address);
               addNotificationRequest(name, address);
               addPendingApproval(name, address);
               _showDialog(context);

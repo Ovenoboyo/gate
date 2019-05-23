@@ -45,9 +45,7 @@ class ApprovalScreenState extends State<ApprovalScreen> {
 
   moveScreens() async {
     if(await childExists() == false ) {
-      Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) {
-        return new MyApp();
-      }));
+      Navigator.of(context).pop();
     }
   }
 
