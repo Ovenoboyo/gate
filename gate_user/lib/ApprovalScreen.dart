@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:io';
 import 'package:gate_user/main.dart';
 
@@ -25,13 +26,18 @@ class ApprovalScreen extends StatefulWidget {
 class ApprovalScreenState extends State<ApprovalScreen> {
 
   final databaseReference = FirebaseDatabase.instance.reference();
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = new FlutterLocalNotificationsPlugin();
 
   @override
-  void initState() {
+  void initState()  {
     databaseReference.child("pendingApproval").onChildRemoved.listen((Event event) {
       moveScreens();
     });
     super.initState();
+  }
+
+  Future<void> cancelNotifs() async {
+    await flutterLocalNotificationsPlugin.cancelAll();
   }
 
   Future<bool> childExists() async {
@@ -51,12 +57,14 @@ class ApprovalScreenState extends State<ApprovalScreen> {
 
   void _onPressedAccept() {
     addNotificationRequest("Approved");
+    cancelNotifs();
     Navigator.of(context).pop();
 
   }
 
   void _onPressedDecline() {
     addNotificationRequest("Denied");
+    cancelNotifs();
     Navigator.of(context).pop();
   }
 

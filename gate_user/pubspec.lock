@@ -72,9 +72,9 @@ packages:
   flutter_local_notifications:
     dependency: "direct main"
     description:
-      name: flutter_local_notifications
-      url: "https://pub.dartlang.org"
-    source: hosted
+      path: "..\\local_notifications_oveno"
+      relative: true
+    source: path
     version: "0.7.1+1"
   flutter_test:
     dependency: "direct dev"

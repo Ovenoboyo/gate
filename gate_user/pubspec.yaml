@@ -26,8 +26,9 @@ dependencies:
   firebase_messaging: ^5.0.1+1
   firebase_core: ^0.4.0+1
   firebase_database: ^3.0.0
-  flutter_local_notifications: ^0.7.1+1
   firebase_auth: ^0.11.1
+  flutter_local_notifications:
+    path: ../local_notifications_oveno
 
 dev_dependencies:
   flutter_test:

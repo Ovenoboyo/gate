@@ -28,6 +28,7 @@ dependencies:
   firebase_database: ^3.0.0
   flutter_local_notifications: ^0.7.1+1
   firebase_auth: ^0.11.1
+  random_string: ^0.0.2
 
 dev_dependencies:
   flutter_test:

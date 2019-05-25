@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -32,6 +34,8 @@ class _HomePageState extends State<HomePage> {
 
   FirebaseMessaging firebaseMessaging = new FirebaseMessaging();
 
+  var vibrationPattern = Int64List(4);
+
   @override
   void initState() {
     super.initState();
@@ -57,6 +61,7 @@ class _HomePageState extends State<HomePage> {
         }
       });
     });
+    print(widget.flat);
   }
 
   void fcmSubscribe() {
@@ -125,6 +130,10 @@ class _HomePageState extends State<HomePage> {
   }
 
   pushNotification(String name, String time, String flat) async {
+    vibrationPattern[0] = 0;
+    vibrationPattern[1] = 1000;
+    vibrationPattern[2] = 5000;
+    vibrationPattern[3] = 2000;
     FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = new FlutterLocalNotificationsPlugin();
 // initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
     var initializationSettingsAndroid =
@@ -137,8 +146,8 @@ class _HomePageState extends State<HomePage> {
         onSelectNotification: onSelectNotification);
 
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-        '1', 'gate-entry', 'your channel description',
-        importance: Importance.High, priority: Priority.High, ticker: 'ticker');
+        'org.sahil.gupte.gate_admin.HeadsUpChannel', 'gate-entry', 'Only for Headsup',
+        importance: Importance.High, priority: Priority.High, ticker: '$name Needs Approval', ongoing: true, autoCancel: false, vibrationPattern: vibrationPattern);
     var iOSPlatformChannelSpecifics = IOSNotificationDetails();
     var platformChannelSpecifics = NotificationDetails(
         androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);

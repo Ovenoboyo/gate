@@ -4,6 +4,8 @@ import 'dart:async';
 import 'login_signup_page.dart';
 import 'package:gate_admin/services/authentication.dart';
 
+import 'service_create_page.dart';
+
 class HomePage extends StatefulWidget {
   HomePage({Key key, this.auth, this.userId, this.onSignedOut})
       : super(key: key);
@@ -24,7 +26,7 @@ class _HomePageState extends State<HomePage> {
   void _checkEmailVerification() async {
     _isEmailVerified = await widget.auth.isEmailVerified();
     if (!_isEmailVerified) {
-      _showVerifyEmailDialog();
+      //_showVerifyEmailDialog();
     }
   }
 
@@ -91,6 +93,13 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void onRegisterService() {
+    Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) {
+      return new ServiceCreatePage ();
+    })
+    );
+  }
+
   void _onSignedup() {
 
   }
@@ -117,8 +126,12 @@ class _HomePageState extends State<HomePage> {
                 onPressed: _signOut)
           ],
         ),
-        body: new Center(
-          child: new RaisedButton(onPressed: onRegisterUser),
+        body: new Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            new RaisedButton(onPressed: onRegisterUser),
+            new RaisedButton(onPressed: onRegisterService),
+          ],
         )
     );
   }

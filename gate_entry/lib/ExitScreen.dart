@@ -13,6 +13,7 @@ class ExitScreenState extends State<ExitScreen> {
   List<String> nameList = new List();
   List<DropdownMenuItem<int>> dropDown = new List();
   var _value = 0;
+  String timestamp, flat;
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +72,6 @@ class ExitScreenState extends State<ExitScreen> {
   }
 
   onSubmit() async {
-    String timestamp, flat;
     var data = await databaseReference.child("PendingExit").once();
       Map<dynamic, dynamic> map = data.value;
       map.forEach((key, value) {

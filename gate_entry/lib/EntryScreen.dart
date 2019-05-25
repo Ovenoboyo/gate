@@ -11,14 +11,19 @@ class EntryScreen extends StatefulWidget {
   }
 }
 
+enum FormMode1 { VISITOR, SERVICE }
+
 class EntryScreenState extends State<EntryScreen> {
   String address, name;
   final TextEditingController controllerName = new TextEditingController();
+  final TextEditingController controllerCode = new TextEditingController();
   final TextEditingController controllerAddress0 = new TextEditingController();
   final TextEditingController controllerAddress1 = new TextEditingController();
   final databaseReference = FirebaseDatabase.instance.reference();
   FirebaseMessaging firebaseMessaging = new FirebaseMessaging();
+  final _formKey = new GlobalKey<FormState>();
 
+  FormMode1 _formMode;
   String time;
   String _approval = "Waiting...";
   var submitted = false;
@@ -29,7 +34,12 @@ class EntryScreenState extends State<EntryScreen> {
   @override
   void initState() {
     super.initState();
-    getUID();
+    _formMode = FormMode1.VISITOR;
+    fcmSubscribe();
+  }
+
+  void setID() async {
+    await getUID();
   }
 
   Future<void> getUID() async {
@@ -37,13 +47,14 @@ class EntryScreenState extends State<EntryScreen> {
     id = user.uid;
   }
 
-  void fcmSubscribe() {
+  void fcmSubscribe() async {
+    await getUID();
     firebaseMessaging.subscribeToTopic(id);
     print("Subscribed");
   }
 
   void fcmUnSubscribe() {
-    firebaseMessaging.unsubscribeFromTopic("entry_"+id);
+    firebaseMessaging.unsubscribeFromTopic(id);
   }
 
   void firebaseCloudMessaging_Listeners() async {
@@ -65,7 +76,7 @@ class EntryScreenState extends State<EntryScreen> {
             Navigator.of(context).pop();
             _approval = "Waiting...";
             submitted = false;
-            fcmUnSubscribe();
+            //fcmUnSubscribe();
           } else if (_approval == "Denied") {
             Navigator.of(context).pop();
             _showDialog(context);
@@ -73,7 +84,7 @@ class EntryScreenState extends State<EntryScreen> {
             Navigator.of(context).pop();
             _approval = "Waiting...";
             submitted = false;
-            fcmUnSubscribe();
+            //fcmUnSubscribe();
           }
         },
         onResume: (Map<String, dynamic> message) async {
@@ -143,16 +154,50 @@ class EntryScreenState extends State<EntryScreen> {
           ),
         ),
       ),
-      body: Builder(builder: (context) =>
+      body:
+      Builder(builder: (context) =>
         Column(
+          key: _formKey,
           mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[MainCardWidget(), GenericButton("Submit", context)],
+            children: <Widget> [
+              VisitorCardWidget(),
+              ServiceCardWidget(),
+              GenericSubmitButton("Submit", context),
+              GenericSwitchButton(_formMode == FormMode1.VISITOR ? "Enter Code" : "Visitor Details", context)
+          ],
         ),
       ),
     );
   }
 
-  Widget GenericButton(String text, BuildContext mContext) {
+  void _switchFormToVisitor() {
+    //_formKey.currentState.reset();
+    setState(() {
+      _formMode = FormMode1.VISITOR;
+    });
+  }
+
+  void _switchFormToService() {
+    //_formKey.currentState.reset();
+    setState(() {
+      _formMode = FormMode1.SERVICE;
+    });
+  }
+
+  Widget GenericSwitchButton(String text, BuildContext mContext) {
+    return RaisedButton(
+      textColor: Colors.white,
+      color: Colors.blue,
+      onPressed:
+        _formMode == FormMode1.SERVICE
+            ? _switchFormToVisitor
+            : _switchFormToService,
+
+      child: new Text(text),
+    );
+  }
+
+  Widget GenericSubmitButton(String text, BuildContext mContext) {
     return RaisedButton(
       textColor: Colors.white,
       color: Colors.blue,
@@ -196,34 +241,56 @@ class EntryScreenState extends State<EntryScreen> {
     );
   }
 
-  Widget MainCardWidget() {
-    Widget inputField = inputTextField(controllerName, "Name");
-    return Center(
-      child: Card(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            InputTextFieldRows(inputField, "Name:", "Name"),
-            new Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  new Container(
-                    width: 50,
-                    height: 20,
-                    margin:
-                        EdgeInsets.only(left: 10, right: 20, top: 7, bottom: 7),
-                    child: new Text(
-                      "Address",
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                  inputTextField(controllerAddress0, "Wing"),
-                  inputTextField(controllerAddress1, "Flat Number")
-                ]),
-          ],
+  Widget ServiceCardWidget() {
+    if (_formMode == FormMode1.SERVICE) {
+      Widget inputField = inputTextField(controllerCode, "Code");
+      return Center(
+        child: Card(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              InputTextFieldRows(inputField, "Code:", "Code"),
+            ],
+          ),
         ),
-      ),
-    );
+      );
+    } else {
+      return new Container();
+    }
+  }
+
+  Widget VisitorCardWidget() {
+    if (_formMode == FormMode1.VISITOR) {
+      Widget inputField = inputTextField(controllerName, "Name");
+      return Center(
+        child: Card(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              InputTextFieldRows(inputField, "Name:", "Name"),
+              new Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    new Container(
+                      width: 50,
+                      height: 20,
+                      margin:
+                      EdgeInsets.only(left: 10, right: 20, top: 7, bottom: 7),
+                      child: new Text(
+                        "Address",
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    inputTextField(controllerAddress0, "Wing"),
+                    inputTextField(controllerAddress1, "Flat Number")
+                  ]),
+            ],
+          ),
+        ),
+      );
+    } else {
+      return new Container();
+    }
   }
 
   void addData(String address) {
@@ -236,37 +303,65 @@ class EntryScreenState extends State<EntryScreen> {
         .toString()).set({'Name': name, 'ExitTime': "null"});
   }
 
-  bool onSubmit(String nameVal, String addressVal0, String addressVal1, BuildContext context) {
-    time = DateTime.now().millisecondsSinceEpoch.toString();
-    if (submitted) {
-      print("ongoing instance");
-      return false;
-    } else {
-      submitted = true;
-      name = nameVal;
-      address = addressVal0 + "-" + addressVal1;
-      databaseReference
-          .child("FlatAssociates")
-          .once()
-          .then((DataSnapshot snapshot) {
-        if (snapshot.value != null) {
-          for (var data in snapshot.value.keys) {
-            if (address == data) {
-              addNotificationRequest(name, address);
-              addPendingApproval(name, address);
-              _showDialog(context);
-              return true;
+  bool _validateAndSave() {
+    final form = _formKey.currentState;
+    if (form.validate()) {
+      form.save();
+      return true;
+    }
+    return false;
+  }
+
+  bool submitVisitor(String nameVal, String addressVal0, String addressVal1, BuildContext context) {
+      time = DateTime
+          .now()
+          .millisecondsSinceEpoch
+          .toString();
+      if (submitted) {
+        print("ongoing instance");
+        return false;
+      } else {
+        submitted = true;
+        name = nameVal;
+        address = addressVal0 + "-" + addressVal1;
+        databaseReference
+            .child("FlatAssociates")
+            .once()
+            .then((DataSnapshot snapshot) {
+          if (snapshot.value != null) {
+            for (var data in snapshot.value.keys) {
+              if (address == data) {
+                addNotificationRequest(name, address);
+                addPendingApproval(name, address);
+                _showDialog(context);
+                return true;
+              }
             }
           }
-        }
-        _showToast(context);
-      });
+          _showToast(context);
+        });
+      }
       return false;
+  }
+
+  bool onSubmit(String nameVal, String addressVal0, String addressVal1, BuildContext context) {
+
+    if(_validateAndSave()) {
+      try {
+        if (_formMode == FormMode1.VISITOR) {
+          submitVisitor(nameVal, addressVal0, addressVal1, context);
+        } else if (_formMode == FormMode1.SERVICE) {
+          //service code
+        }
+      } catch (e) {
+        print(e);
+        return false;
+      }
     }
+    return false;
   }
 
   void _showDialog(BuildContext context) {
-    fcmSubscribe();
     firebaseCloudMessaging_Listeners();
     showDialog(
       context: context,
@@ -275,9 +370,18 @@ class EntryScreenState extends State<EntryScreen> {
         return AlertDialog(
           title: new Text("Awaiting Approval..."),
           content: new Text('$_approval'),
+          actions: <Widget>[
+            new FlatButton(onPressed: dialogDismiss , child: new Text("Cancel"))
+          ],
         );
       },
     );
+  }
+
+  void dialogDismiss() {
+    submitted = false;
+    Navigator.of(context).pop();
+    //TODO: Remove pending approvals
   }
 
   void _showToast(BuildContext context) {

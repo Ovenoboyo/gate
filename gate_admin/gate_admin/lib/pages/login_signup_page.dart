@@ -60,7 +60,7 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
             String address = _wing.toUpperCase()+"-"+_house;
             databaseReference
                 .child("FlatAssociates").child(address)
-                .set({'Name': userId});
+                .set({userId: userId});
           }
         }
         setState(() {

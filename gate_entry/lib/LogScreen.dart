@@ -58,14 +58,19 @@ class LogScreenState extends State<LogScreen> {
     }
   }
 
+  Future<List<List<String>>> getFinalValues() async {
+    return await getValues();
+  }
+
   Future<List<List<String>>> getValues() async {
     List<List<String>> finalList = new List();
     flatList.clear();
     nameList.clear();
     timeList.clear();
     exitTimeList.clear();
-    var data = await databaseReference.child("FlatAssociates").once();
+    var data = await databaseReference.child("Data").once();
     Map<dynamic, dynamic> map = data.value;
+    //print(map);
     map.forEach((key, value) {
       Map<dynamic, dynamic> map1 = value;
       map1.forEach((key1, value1) {
@@ -74,16 +79,19 @@ class LogScreenState extends State<LogScreen> {
         timeList.add(key1);
         //print(key1);
         Map<dynamic, dynamic> map2 = value1;
+        print(map2);
         map2.forEach((key2, value2) {
           if (key2 == "Name") {
+            print(value2);
             nameList.add(value2);
           } else if (key2 == "ExitTime") {
             exitTimeList.add(value2);
           }
         });
       });
+      print("here");
     });
-    print(exitTimeList);
+    print("here");
     finalList.add(flatList);
     finalList.add(nameList);
     finalList.add(timeList);
@@ -98,10 +106,11 @@ class LogScreenState extends State<LogScreen> {
 
   Widget ListBuilder() {
     return new FutureBuilder(
-        future: getValues(),
+        future: getFinalValues(),
         initialData: "Loading text..",
         builder: (BuildContext context, AsyncSnapshot<Object> list) {
           sortList();
+          //print(list);
 
           if(!list.hasData) {
             return new Center(
