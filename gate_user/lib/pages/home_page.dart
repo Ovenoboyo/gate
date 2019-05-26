@@ -11,6 +11,7 @@ import 'package:gate_user/ApprovalScreen.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
+import 'package:gate_user/tabs/Home.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key key, this.auth, this.userId, this.onSignedOut})
@@ -36,11 +37,18 @@ class _HomePageState extends State<HomePage> {
 
   var vibrationPattern = Int64List(4);
 
+  int _currentIndex = 0;
+
+  final List<Widget> _children = [];
+
   @override
   void initState() {
     super.initState();
     fcmSubscribe();
     firebaseCloudMessaging_Listeners();
+    _children.add(LogPage(flat: widget.flat));
+    _children.add(LogPage(flat: widget.flat));
+    _children.add(LogPage(flat: widget.flat));
   }
 
   Future<void> getUID() async {
@@ -310,9 +318,36 @@ class _HomePageState extends State<HomePage> {
                 onPressed: _signOut)
           ],
         ),
-        body: new Center(
-          child: new Container()
-        )
+        body: _children[_currentIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        onTap: onTabTapped,
+        currentIndex: _currentIndex,
+        items: [
+          new BottomNavigationBarItem(
+              icon:  Icon(Icons.home),
+            title: Text("Home"),
+
+          ),
+
+          new BottomNavigationBarItem(
+            icon:  Icon(Icons.person_add),
+            title: Text("Code"),
+
+          ),
+
+          new BottomNavigationBarItem(
+            icon:  Icon(Icons.person),
+            title: Text("Profile"),
+
+          ),
+        ],
+      ),
     );
+  }
+
+  void onTabTapped(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
   }
 }
