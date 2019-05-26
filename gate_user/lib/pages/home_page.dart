@@ -1,5 +1,4 @@
 import 'dart:typed_data';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -11,6 +10,7 @@ import 'dart:io';
 import 'package:gate_user/ApprovalScreen.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:intl/intl.dart';
 
 class HomePage extends StatefulWidget {
   HomePage({Key key, this.auth, this.userId, this.onSignedOut})
@@ -19,7 +19,7 @@ class HomePage extends StatefulWidget {
   final BaseAuth auth;
   final VoidCallback onSignedOut;
   final String userId;
-  var name, time, flat, id, userid;
+  var name, time, flat, id, userid, type;
 
   @override
   State<StatefulWidget> createState() => new _HomePageState();
@@ -39,7 +39,6 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    confirmFlat();
     fcmSubscribe();
     firebaseCloudMessaging_Listeners();
   }
@@ -49,7 +48,7 @@ class _HomePageState extends State<HomePage> {
     widget.userid = user.uid;
   }
 
-  void confirmFlat() async {
+  Future<void> confirmFlat() async {
     await getUID();
     var data = await databaseReference.child("FlatAssociates").once();
     Map<dynamic, dynamic> map = data.value;
@@ -64,13 +63,14 @@ class _HomePageState extends State<HomePage> {
     print(widget.flat);
   }
 
-  void fcmSubscribe() {
-    firebaseMessaging.subscribeToTopic('A-705');
+  void fcmSubscribe() async {
+    await confirmFlat();
+    firebaseMessaging.subscribeToTopic(widget.flat);
     print("Subscribed");
   }
 
   void fcmUnSubscribe() {
-    firebaseMessaging.unsubscribeFromTopic('TopicToListen');
+    firebaseMessaging.unsubscribeFromTopic(widget.flat);
   }
 
   void firebaseCloudMessaging_Listeners() {
@@ -88,11 +88,17 @@ class _HomePageState extends State<HomePage> {
           widget.flat = data['flat'];
           widget.time = data['time'];
           widget.id = data['entrynode'];
-          pushNotification((data['name']), (data['time']), (data['flat']));
+          widget.type = data['type'];
+          print(data['type']);
 
-          Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) {
-            return new ApprovalScreen(data['name'], data['time'], data['flat'], data['entrynode']);
-          }));
+          if (widget.type == "1") {
+            pushNotification1((data['name']), (data['time']), (data['flat']));
+            Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) {
+              return new ApprovalScreen(data['name'], data['time'], data['flat'], data['entrynode']);
+            }));
+          } else if(widget.type == "2") {
+            pushNotification2((data['name']), (data['time']), (data['flat']));
+          }
         },
         onResume: (Map<String, dynamic> message) async {
           print('on resume $message');
@@ -129,7 +135,18 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  pushNotification(String name, String time, String flat) async {
+  String getDateTime(String val) {
+    if (val.isEmpty) {
+      return val;
+    } else {
+      var date = new DateTime.fromMillisecondsSinceEpoch(int.parse(val));
+      var formatter = new DateFormat('hh:mm, dd-MM-yyyy');
+      String formatted = formatter.format(date);
+      return formatted;
+    }
+  }
+
+  pushNotification1(String name, String time, String flat) async {
     vibrationPattern[0] = 0;
     vibrationPattern[1] = 1000;
     vibrationPattern[2] = 5000;
@@ -146,13 +163,35 @@ class _HomePageState extends State<HomePage> {
         onSelectNotification: onSelectNotification);
 
     var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-        'org.sahil.gupte.gate_admin.HeadsUpChannel', 'gate-entry', 'Only for Headsup',
+        'org.sahil.gupte.gate_user.HeadsUpChannel', 'Visitor Entry', 'Only for Headsup',
         importance: Importance.High, priority: Priority.High, ticker: '$name Needs Approval', ongoing: true, autoCancel: false, vibrationPattern: vibrationPattern);
     var iOSPlatformChannelSpecifics = IOSNotificationDetails();
     var platformChannelSpecifics = NotificationDetails(
         androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
     await flutterLocalNotificationsPlugin.show(
-        0, flat, name+" is requesting approval at "+time, platformChannelSpecifics,
+        0, flat, name+" is requesting approval at "+getDateTime(time), platformChannelSpecifics,
+        payload: 'item x');
+  }
+
+  pushNotification2(String name, String time, String flat) async {
+    FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = new FlutterLocalNotificationsPlugin();
+// initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
+    var initializationSettingsAndroid =
+    new AndroidInitializationSettings('@mipmap/ic_launcher');
+    var initializationSettingsIOS = new IOSInitializationSettings(
+        onDidReceiveLocalNotification: onDidReceiveLocalNotification);
+    var initializationSettings = new InitializationSettings(
+        initializationSettingsAndroid, initializationSettingsIOS);
+    flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
+        'org.sahil.gupte.gate_user.normalChannel', 'Service Entry', 'Only for normal',
+        importance: Importance.Default, priority: Priority.Default, ticker: '$name Service', autoCancel: false);
+    var iOSPlatformChannelSpecifics = IOSNotificationDetails();
+    var platformChannelSpecifics = NotificationDetails(
+        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
+    await flutterLocalNotificationsPlugin.show(
+        0, flat, name+" has entered the premises at "+getDateTime(time), platformChannelSpecifics,
         payload: 'item x');
   }
 

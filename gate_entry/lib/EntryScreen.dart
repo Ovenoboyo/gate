@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -14,7 +16,7 @@ class EntryScreen extends StatefulWidget {
 enum FormMode1 { VISITOR, SERVICE }
 
 class EntryScreenState extends State<EntryScreen> {
-  String address, name;
+  String address, name, nameService;
   final TextEditingController controllerName = new TextEditingController();
   final TextEditingController controllerCode = new TextEditingController();
   final TextEditingController controllerAddress0 = new TextEditingController();
@@ -23,10 +25,13 @@ class EntryScreenState extends State<EntryScreen> {
   FirebaseMessaging firebaseMessaging = new FirebaseMessaging();
   final _formKey = new GlobalKey<FormState>();
 
+  List<String> serviceFlats = new List();
+
   FormMode1 _formMode;
   String time;
   String _approval = "Waiting...";
   var submitted = false;
+  var codeResult;
   final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
 
   var id;
@@ -76,7 +81,7 @@ class EntryScreenState extends State<EntryScreen> {
             Navigator.of(context).pop();
             _approval = "Waiting...";
             submitted = false;
-            //fcmUnSubscribe();
+            fcmUnSubscribe();
           } else if (_approval == "Denied") {
             Navigator.of(context).pop();
             _showDialog(context);
@@ -84,7 +89,7 @@ class EntryScreenState extends State<EntryScreen> {
             Navigator.of(context).pop();
             _approval = "Waiting...";
             submitted = false;
-            //fcmUnSubscribe();
+            fcmUnSubscribe();
           }
         },
         onResume: (Map<String, dynamic> message) async {
@@ -96,10 +101,10 @@ class EntryScreenState extends State<EntryScreen> {
     );
   }
 
-  void addPendingExit(String name, String address) {
+  void addPendingExit(String name, String address, String time) {
     databaseReference
         .child("PendingExit")
-        .child("" + DateTime.now().millisecondsSinceEpoch.toString())
+        .child(time)
         .child(address)
         .set({
       'Name': name,
@@ -123,7 +128,7 @@ class EntryScreenState extends State<EntryScreen> {
         .remove();
   }
 
-  void addNotificationRequest(String name, String address) {
+  void addNotificationRequestVisitor(String name, String address) {
     String time = DateTime.now().millisecondsSinceEpoch.toString();
     databaseReference
         .child("notificationRequests").child("from")
@@ -132,11 +137,27 @@ class EntryScreenState extends State<EntryScreen> {
       'name': name,
       'flat': address,
       'time': time,
-      'entrynode': id
+      'entrynode': id,
+      'type': 1
     });
   }
 
+  void addNotificationRequestService(String name, int time) async {
+    for (int i = 0; i < serviceFlats.length; i++) {
+      databaseReference
+          .child("notificationRequests").child("from")
+          .child((time+i).toString())
+          .set({
+        'name': name,
+        'flat': serviceFlats[i],
+        'time': time+i,
+        'entrynode': id,
+        'type': 2
+      });
+      await new Future.delayed(const Duration(seconds: 3));
+    }
 
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -156,29 +177,31 @@ class EntryScreenState extends State<EntryScreen> {
       ),
       body:
       Builder(builder: (context) =>
-        Column(
-          key: _formKey,
-          mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget> [
-              VisitorCardWidget(),
-              ServiceCardWidget(),
-              GenericSubmitButton("Submit", context),
-              GenericSwitchButton(_formMode == FormMode1.VISITOR ? "Enter Code" : "Visitor Details", context)
-          ],
-        ),
+          Form(
+            key: _formKey,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget> [
+                VisitorCardWidget(),
+                ServiceCardWidget(),
+                GenericSubmitButton("Submit", context),
+                GenericSwitchButton(_formMode == FormMode1.VISITOR ? "Enter Code" : "Visitor Details", context)
+              ],
+            ),
+          )
       ),
     );
   }
 
   void _switchFormToVisitor() {
-    //_formKey.currentState.reset();
+    _formKey.currentState.reset();
     setState(() {
       _formMode = FormMode1.VISITOR;
     });
   }
 
   void _switchFormToService() {
-    //_formKey.currentState.reset();
+    _formKey.currentState.reset();
     setState(() {
       _formMode = FormMode1.SERVICE;
     });
@@ -294,13 +317,11 @@ class EntryScreenState extends State<EntryScreen> {
   }
 
   void addData(String address) {
+    String time = DateTime.now().millisecondsSinceEpoch.toString();
     removePendingApproval();
-    addPendingExit(name, address);
+    addPendingExit(name, address, time);
     databaseReference
-        .child("Data").child(address).child("" + DateTime
-        .now()
-        .millisecondsSinceEpoch
-        .toString()).set({'Name': name, 'ExitTime': "null"});
+        .child("Data").child(address).child(time).set({'Name': name, 'ExitTime': "null"});
   }
 
   bool _validateAndSave() {
@@ -317,31 +338,71 @@ class EntryScreenState extends State<EntryScreen> {
           .now()
           .millisecondsSinceEpoch
           .toString();
-      if (submitted) {
-        print("ongoing instance");
-        return false;
-      } else {
-        submitted = true;
-        name = nameVal;
-        address = addressVal0 + "-" + addressVal1;
-        databaseReference
-            .child("FlatAssociates")
-            .once()
-            .then((DataSnapshot snapshot) {
-          if (snapshot.value != null) {
-            for (var data in snapshot.value.keys) {
-              if (address == data) {
-                addNotificationRequest(name, address);
-                addPendingApproval(name, address);
-                _showDialog(context);
-                return true;
+      if(_validateAndSave()) {
+        if (submitted) {
+          print("ongoing instance");
+          return false;
+        } else {
+          submitted = true;
+          name = nameVal;
+          address = addressVal0 + "-" + addressVal1;
+          databaseReference
+              .child("FlatAssociates")
+              .once()
+              .then((DataSnapshot snapshot) {
+            if (snapshot.value != null) {
+              for (var data in snapshot.value.keys) {
+                if (address == data) {
+                  addNotificationRequestVisitor(name, address);
+                  addPendingApproval(name, address);
+                  _showDialog(context);
+                  return true;
+                }
               }
             }
-          }
-          _showToast(context);
-        });
+            _showToast(context);
+          });
+        }
+        return false;
+      } else {
+        return false;
       }
-      return false;
+  }
+
+  Future<void> checkCode(String code) async {
+    serviceFlats.clear();
+    var data = await databaseReference.child("ServiceAssociates").once();
+    Map<dynamic, dynamic> map = data.value;
+    map.forEach((key, value) {
+      print(code);
+      if(code == key) {
+        print("here");
+        Map<dynamic, dynamic> map2 = value;
+        nameService = map2['name'];
+        codeResult = true;
+        for (int i = 0; i < map2.keys.length -1; i++) {
+          serviceFlats.add(map2['flat$i']);
+        }
+        return null;
+      }
+    });
+  }
+
+  void submitService (String code) async {
+    await checkCode(code);
+    print (serviceFlats);
+      if (codeResult) {
+        addServiceData();
+      }
+  }
+
+  void addServiceData () {
+    int time = DateTime.now().millisecondsSinceEpoch;
+    databaseReference
+        .child("ServiceEntry").child(nameService).child(time.toString())
+        .set({'ExitTime': "null"});
+    addNotificationRequestService(nameService, time);
+    addPendingExit(nameService, "Service", time.toString());
   }
 
   bool onSubmit(String nameVal, String addressVal0, String addressVal1, BuildContext context) {
@@ -351,7 +412,7 @@ class EntryScreenState extends State<EntryScreen> {
         if (_formMode == FormMode1.VISITOR) {
           submitVisitor(nameVal, addressVal0, addressVal1, context);
         } else if (_formMode == FormMode1.SERVICE) {
-          //service code
+          submitService((controllerCode.text).toUpperCase());
         }
       } catch (e) {
         print(e);
@@ -381,7 +442,7 @@ class EntryScreenState extends State<EntryScreen> {
   void dialogDismiss() {
     submitted = false;
     Navigator.of(context).pop();
-    //TODO: Remove pending approvals
+    removePendingApproval();
   }
 
   void _showToast(BuildContext context) {
