@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/services.dart';
 import 'package:random_string/random_string.dart';
 
 class ServiceCreatePage extends StatefulWidget {
@@ -94,7 +95,9 @@ class ServiceCreatePageState extends State<ServiceCreatePage> {
                   color: Colors.grey,
                 )),
             textCapitalization: TextCapitalization.characters,
-            maxLength: 1,
+            inputFormatters:[
+              LengthLimitingTextInputFormatter(1),
+            ],
             controller: controllerWing,
           ),
         ),
@@ -163,9 +166,9 @@ class ServiceCreatePageState extends State<ServiceCreatePage> {
     for (int i = 0; i<count; i++) {
       var address = _countControllerWing[i].text+"-"+_countControllerHouse[i].text;
           print(address);
-          map['flat$i'] = address;
+          map['Flat$i'] = address;
     }
-    map['name'] = name;
+    map['Name'] = name;
     print(map);
     databaseReference
         .child("ServiceAssociates").child(code).update(map);
@@ -183,6 +186,7 @@ class ServiceCreatePageState extends State<ServiceCreatePage> {
       _countControllerHouse.clear();
       _countControllerWing.clear();
       _emailController.clear();
+      count = 1;
     });
 
   }

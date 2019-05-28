@@ -24,6 +24,7 @@ class LogScreenState extends State<LogScreen> {
   final _formKey = new GlobalKey<FormState>();
 
   List<String> nameList = new List();
+  List<String> countList = new List();
   List<String> timeList = new List();
   List<String> exitTimeList = new List();
   List<String> flatList = new List();
@@ -106,6 +107,7 @@ class LogScreenState extends State<LogScreen> {
     List<List<String>> finalList = new List();
     flatList.clear();
     nameList.clear();
+    countList.clear();
     timeList.clear();
     exitTimeList.clear();
     var data = await databaseReference.child("Data").once();
@@ -116,13 +118,9 @@ class LogScreenState extends State<LogScreen> {
         flatList.add(key);
         timeList.add(key1);
         Map<dynamic, dynamic> map2 = value1;
-        map2.forEach((key2, value2) {
-          if (key2 == "Name") {
-            nameList.add(value2);
-          } else if (key2 == "ExitTime") {
-            exitTimeList.add(value2);
-          }
-        });
+        nameList.add(map2['Name']);
+        countList.add(map2['Count']);
+        exitTimeList.add(map2['ExitTime']);
       });
     });
     finalList.add(flatList);
@@ -134,6 +132,7 @@ class LogScreenState extends State<LogScreen> {
 
   Future<List<List<String>>> _getValuesService() async {
     List<List<String>> finalList = new List();
+    countList.clear();
     nameList.clear();
     timeList.clear();
     exitTimeList.clear();
@@ -175,9 +174,11 @@ class LogScreenState extends State<LogScreen> {
                 itemCount: uniqueList.length,
                 itemBuilder: (BuildContext context, int index) {
                   return new ExpansionTile(
-                    title: new Text(
-                      uniqueList[index],
-                      style: new TextStyle(fontWeight: FontWeight.bold),
+                    title: new Center(
+                      child: new Text(
+                        uniqueList[index],
+                        style: new TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                     children: <Widget>[
                       new ListView.builder(
@@ -194,7 +195,20 @@ class LogScreenState extends State<LogScreen> {
                                       left: 10, right: 20, top: 7, bottom: 7),
                                   child: new Row(
                                     mainAxisAlignment:
-                                        MainAxisAlignment.spaceAround,
+                                        MainAxisAlignment.spaceBetween,
+                                    children: <Widget>[
+                                      new Text("Count:"),
+                                      new Text(countList[
+                                          (finalPositionList[index][index1])])
+                                    ],
+                                  ),
+                                ),
+                                new Container(
+                                  padding: EdgeInsets.only(
+                                      left: 10, right: 20, top: 7, bottom: 7),
+                                  child: new Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: <Widget>[
                                       new Text("Entry Time:"),
                                       new Text(getDateTime(timeList[
@@ -207,7 +221,7 @@ class LogScreenState extends State<LogScreen> {
                                       left: 10, right: 20, top: 7, bottom: 7),
                                   child: new Row(
                                     mainAxisAlignment:
-                                        MainAxisAlignment.spaceAround,
+                                        MainAxisAlignment.spaceBetween,
                                     children: <Widget>[
                                       new Text("Exit Time:"),
                                       new Text(getDateTime(exitTimeList[
@@ -244,10 +258,9 @@ class LogScreenState extends State<LogScreen> {
                     itemBuilder: (BuildContext context, int index) {
                       return new ExpansionTile(
                         title: new Center(
-                          child: new Text(
-                              uniqueList[index],
-                              style: new TextStyle(fontWeight: FontWeight.bold)
-                          ),
+                          child: new Text(uniqueList[index],
+                              style:
+                                  new TextStyle(fontWeight: FontWeight.bold)),
                         ),
                         children: <Widget>[
                           new ListView.builder(
@@ -258,51 +271,65 @@ class LogScreenState extends State<LogScreen> {
                                     padding: EdgeInsets.only(
                                         left: 10, right: 20, top: 7, bottom: 7),
                                     child: new Column(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceAround,
-                                  children: <Widget>[
-                                    new Container(
-                                      child: new Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: <Widget>[
-                                          new Container(
-                                            padding: EdgeInsets.only(
-                                                left: 10, right: 20, top: 2, bottom: 2),
-                                            child: new Text("Entry Time"),
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceAround,
+                                      children: <Widget>[
+                                        new Container(
+                                          child: new Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: <Widget>[
+                                              new Container(
+                                                padding: EdgeInsets.only(
+                                                    left: 10,
+                                                    right: 20,
+                                                    top: 2,
+                                                    bottom: 2),
+                                                child: new Text("Entry Time"),
+                                              ),
+                                              new Container(
+                                                  padding: EdgeInsets.only(
+                                                      left: 10,
+                                                      right: 20,
+                                                      top: 2,
+                                                      bottom: 2),
+                                                  child: new Text(getDateTime(
+                                                      timeList[
+                                                          finalPositionList[
+                                                                  index]
+                                                              [index1]]))),
+                                            ],
                                           ),
-                                          new Container(
-                                              padding: EdgeInsets.only(
-                                                  left: 10, right: 20, top: 2, bottom: 2),
-                                          child: new Text(getDateTime(timeList[
-                                              finalPositionList[index]
-                                                  [index1]]))
+                                        ),
+                                        new Container(
+                                          child: new Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: <Widget>[
+                                              new Container(
+                                                padding: EdgeInsets.only(
+                                                    left: 10,
+                                                    right: 20,
+                                                    top: 2,
+                                                    bottom: 2),
+                                                child: new Text("Exit Time"),
+                                              ),
+                                              new Container(
+                                                  padding: EdgeInsets.only(
+                                                      left: 10,
+                                                      right: 20,
+                                                      top: 2,
+                                                      bottom: 2),
+                                                  child: new Text(getDateTime(
+                                                      exitTimeList[
+                                                          finalPositionList[
+                                                                  index]
+                                                              [index1]]))),
+                                            ],
                                           ),
-                                        ],
-                                      ),
-                                    ),
-                                    new Container(
-                                      child: new Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.spaceBetween,
-                                        children: <Widget>[
-                                          new Container(
-                                            padding: EdgeInsets.only(
-                                                left: 10, right: 20, top: 2, bottom: 2),
-                                            child: new Text("Exit Time"),
-                                          ),
-                                          new Container(
-                                              padding: EdgeInsets.only(
-                                                  left: 10, right: 20, top: 2, bottom: 2),
-                                          child: new Text(getDateTime(exitTimeList[
-                                              finalPositionList[index]
-                                                  [index1]]))
-                                          ),
-                                        ],
-                                      ),
-                                    )
-                                  ],
-                                ));
+                                        )
+                                      ],
+                                    ));
                               })
                         ],
                       );
@@ -312,26 +339,25 @@ class LogScreenState extends State<LogScreen> {
   }
 
   void _sortList(List<String> list) {
-    if(_formMode == FormMode2.SERVICE) {
+    if (_formMode == FormMode2.SERVICE) {
       var tmp;
-      for(int i = 0; i<timeList.length; i++) {
-        for (int j = 0; j<i; j++) {
-          if(int.parse(timeList[j]) > int.parse(timeList[j+1])) {
-
+      for (int i = 0; i < timeList.length; i++) {
+        for (int j = 0; j < i; j++) {
+          if (int.parse(timeList[j]) < int.parse(timeList[j + 1])) {
             //timeList
             tmp = timeList[j];
-            timeList[j] = timeList[j+1];
-            timeList[j+1] = tmp;
+            timeList[j] = timeList[j + 1];
+            timeList[j + 1] = tmp;
 
             //nameList
             tmp = nameList[j];
-            nameList[j] = nameList[j+1];
-            nameList[j+1] = tmp;
+            nameList[j] = nameList[j + 1];
+            nameList[j + 1] = tmp;
 
             //exitTimeList
             tmp = exitTimeList[j];
-            exitTimeList[j] = exitTimeList[j+1];
-            exitTimeList[j+1] = tmp;
+            exitTimeList[j] = exitTimeList[j + 1];
+            exitTimeList[j + 1] = tmp;
           }
         }
       }

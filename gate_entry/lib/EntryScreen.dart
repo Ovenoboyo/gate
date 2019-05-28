@@ -16,8 +16,9 @@ class EntryScreen extends StatefulWidget {
 enum FormMode1 { VISITOR, SERVICE }
 
 class EntryScreenState extends State<EntryScreen> {
-  String address, name, nameService;
+  String address, name, nameService, count;
   final TextEditingController controllerName = new TextEditingController();
+  final TextEditingController controllerCount = new TextEditingController();
   final TextEditingController controllerCode = new TextEditingController();
   final TextEditingController controllerAddress0 = new TextEditingController();
   final TextEditingController controllerAddress1 = new TextEditingController();
@@ -27,11 +28,13 @@ class EntryScreenState extends State<EntryScreen> {
 
   List<String> serviceFlats = new List();
 
+  BuildContext mContext;
+
   FormMode1 _formMode;
   String time;
   String _approval = "Waiting...";
   var submitted = false;
-  var codeResult;
+  var codeResult, codeType;
   final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
 
   var id;
@@ -226,7 +229,7 @@ class EntryScreenState extends State<EntryScreen> {
       color: Colors.blue,
       onPressed: () {
         onSubmit(controllerName.text, controllerAddress0.text,
-            controllerAddress1.text, mContext);
+            controllerAddress1.text, controllerCount.text, mContext);
       },
       child: new Text(text),
     );
@@ -284,13 +287,15 @@ class EntryScreenState extends State<EntryScreen> {
 
   Widget VisitorCardWidget() {
     if (_formMode == FormMode1.VISITOR) {
-      Widget inputField = inputTextField(controllerName, "Name");
+      Widget inputFieldName = inputTextField(controllerName, "Name");
+      Widget inputFieldCount = inputTextField(controllerCount, "Count");
       return Center(
         child: Card(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              InputTextFieldRows(inputField, "Name:", "Name"),
+              InputTextFieldRows(inputFieldName, "Name:", "Name"),
+              InputTextFieldRows(inputFieldCount, "Count:", "Count"),
               new Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
@@ -321,7 +326,7 @@ class EntryScreenState extends State<EntryScreen> {
     removePendingApproval();
     addPendingExit(name, address, time);
     databaseReference
-        .child("Data").child(address).child(time).set({'Name': name, 'ExitTime': "null"});
+        .child("Data").child(address).child(time).set({'Name': name, 'Count': count, 'ExitTime': "null"});
   }
 
   bool _validateAndSave() {
@@ -333,7 +338,7 @@ class EntryScreenState extends State<EntryScreen> {
     return false;
   }
 
-  bool submitVisitor(String nameVal, String addressVal0, String addressVal1, BuildContext context) {
+  bool submitVisitor(String nameVal, String addressVal0, String addressVal1, String countVal, BuildContext context) {
       time = DateTime
           .now()
           .millisecondsSinceEpoch
@@ -345,6 +350,7 @@ class EntryScreenState extends State<EntryScreen> {
         } else {
           submitted = true;
           name = nameVal;
+          count = countVal;
           address = addressVal0 + "-" + addressVal1;
           databaseReference
               .child("FlatAssociates")
@@ -360,7 +366,7 @@ class EntryScreenState extends State<EntryScreen> {
                 }
               }
             }
-            _showToast(context);
+            _showToast(context, "Invalid Flat");
           });
         }
         return false;
@@ -370,49 +376,102 @@ class EntryScreenState extends State<EntryScreen> {
   }
 
   Future<void> checkCode(String code) async {
-    serviceFlats.clear();
-    var data = await databaseReference.child("ServiceAssociates").once();
-    Map<dynamic, dynamic> map = data.value;
-    map.forEach((key, value) {
-      print(code);
-      if(code == key) {
-        print("here");
-        Map<dynamic, dynamic> map2 = value;
-        nameService = map2['name'];
-        codeResult = true;
-        for (int i = 0; i < map2.keys.length -1; i++) {
-          serviceFlats.add(map2['flat$i']);
+    RegExp regExp = new RegExp(
+      "[A-Z][A-Z][A-Z][0-9][0-9][0-9]",
+      caseSensitive: false,
+      multiLine: false,
+    );
+
+    RegExp regExp1 = new RegExp(
+      r"[0-9][0-9][0-9][A-Z][A-Z][A-Z]",
+      caseSensitive: false,
+      multiLine: false,
+    );
+
+    if(regExp.stringMatch(code) == code) {
+      print("RegExp match"+code);
+      codeType = 1;
+      serviceFlats.clear();
+      var data = await databaseReference.child("ServiceAssociates").once();
+      Map<dynamic, dynamic> map = data.value;
+      map.forEach((key, value) {
+        if(code == key) {
+          Map<dynamic, dynamic> map2 = value;
+          nameService = map2['Name'];
+          codeResult = true;
+          for (int i = 0; i < map2.keys.length -1; i++) {
+            serviceFlats.add(map2['Flat$i']);
+          }
+          return null;
         }
-        return null;
-      }
-    });
+      });
+    } else if(regExp1.stringMatch(code) == code) {
+      codeType = 2;
+      var data = await databaseReference.child("UserCodes").once();
+      Map<dynamic, dynamic> map = data.value;
+      map.forEach((key, value) {
+        if(code == key) {
+          Map<dynamic, dynamic> map2 = value;
+          name = map2['Name'];
+          address = map2['Address'];
+          count = map2['Count'];
+          codeResult = true;
+        }
+      });
+    } else {
+      codeResult = false;
+      return null;
+    }
   }
 
-  void submitService (String code) async {
+  void submitService (String code , BuildContext context) async {
     await checkCode(code);
-    print (serviceFlats);
       if (codeResult) {
-        addServiceData();
+        print(serviceFlats);
+        print(nameService);
+        addServiceData(code, context);
+      } else {
+        _showToast(mContext, "Code not valid");
       }
   }
 
-  void addServiceData () {
+  void addServiceData (String code, BuildContext mContext) {
     int time = DateTime.now().millisecondsSinceEpoch;
-    databaseReference
-        .child("ServiceEntry").child(nameService).child(time.toString())
-        .set({'ExitTime': "null"});
-    addNotificationRequestService(nameService, time);
-    addPendingExit(nameService, "Service", time.toString());
+
+    _showToast(mContext, "Code Verified!");
+
+    if(codeType == 1) {
+      databaseReference
+          .child("ServiceEntry").child(nameService).child(time.toString())
+          .set({'ExitTime': "null"});
+      addNotificationRequestService(nameService, time);
+      addPendingExit(nameService, "Service", time.toString());
+    } else if(codeType == 2) {
+      databaseReference
+          .child("Data").child(address.toString()).child(time.toString())
+          .set(
+          {
+            'Name': name,
+            'Count': count,
+            'ExitTime': "null"
+          });
+      databaseReference
+          .child("UserCodes").child(code).remove();
+      addNotificationRequestService(name, time);
+      addPendingExit(name, "Service", time.toString());
+    }
+
+    Navigator.of(context).pop();
   }
 
-  bool onSubmit(String nameVal, String addressVal0, String addressVal1, BuildContext context) {
+  bool onSubmit(String nameVal, String addressVal0, String addressVal1, String countVal, BuildContext context) {
 
     if(_validateAndSave()) {
       try {
         if (_formMode == FormMode1.VISITOR) {
-          submitVisitor(nameVal, addressVal0, addressVal1, context);
+          submitVisitor(nameVal, addressVal0, addressVal1, countVal, context);
         } else if (_formMode == FormMode1.SERVICE) {
-          submitService((controllerCode.text).toUpperCase());
+          submitService((controllerCode.text).toUpperCase(), context);
         }
       } catch (e) {
         print(e);
@@ -443,13 +502,14 @@ class EntryScreenState extends State<EntryScreen> {
     submitted = false;
     Navigator.of(context).pop();
     removePendingApproval();
+    setState((){});
   }
 
-  void _showToast(BuildContext context) {
+  void _showToast(BuildContext context, String message) {
     final scaffold = Scaffold.of(context);
     scaffold.showSnackBar(
       SnackBar(
-        content: const Text('No such house'),
+        content: new Text(message),
         action: SnackBarAction(
             label: 'Hide', onPressed: scaffold.hideCurrentSnackBar),
       ),
