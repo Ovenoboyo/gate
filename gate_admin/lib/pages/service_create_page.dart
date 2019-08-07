@@ -171,9 +171,9 @@ class ServiceCreatePageState extends State<ServiceCreatePage> {
     for (int i = 0; i<count; i++) {
       var address = _countControllerWing[i].text+"-"+_countControllerHouse[i].text;
           print(address);
-          map['Flat$i'] = address;
+          map['flat$i'] = address;
     }
-    map['Name'] = name;
+    map['name'] = name;
     print(map);
     databaseReference
         .child("ServiceAssociates").child(code).update(map);

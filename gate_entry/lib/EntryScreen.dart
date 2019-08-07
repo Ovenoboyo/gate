@@ -103,7 +103,7 @@ class EntryScreenState extends State<EntryScreen> {
 
   void addPendingExit(String name, String address, String time) {
     databaseReference.child("PendingExit").child(time).child(address).set({
-      'Name': name,
+      'name': name,
     });
   }
 
@@ -113,7 +113,7 @@ class EntryScreenState extends State<EntryScreen> {
         .child("" + time)
         .child(address)
         .set({
-      'Name': name,
+      'name': name,
     });
   }
 
@@ -320,7 +320,7 @@ class EntryScreenState extends State<EntryScreen> {
         .child("Data")
         .child(address)
         .child(time)
-        .set({'Name': name, 'Count': count, 'ExitTime': "null"});
+        .set({'name': name, 'count': count, 'exitTime': "null"});
   }
 
   bool _validateAndSave() {
@@ -380,7 +380,7 @@ class EntryScreenState extends State<EntryScreen> {
     );
 
     if (regExp.stringMatch(code) == code) {
-      print("RegExp match" + code);
+      print("RegExp match " + code);
       codeType = 1;
       serviceFlats.clear();
       var data = await databaseReference.child("ServiceAssociates").once();
@@ -388,10 +388,10 @@ class EntryScreenState extends State<EntryScreen> {
       map.forEach((key, value) {
         if (code == key) {
           Map<dynamic, dynamic> map2 = value;
-          nameService = map2['Name'];
+          nameService = map2['name'];
           codeResult = true;
           for (int i = 0; i < map2.keys.length - 1; i++) {
-            serviceFlats.add(map2['Flat$i']);
+            serviceFlats.add(map2['flat$i']);
           }
           return null;
         }
@@ -403,9 +403,9 @@ class EntryScreenState extends State<EntryScreen> {
       map.forEach((key, value) {
         if (code == key) {
           Map<dynamic, dynamic> map2 = value;
-          name = map2['Name'];
-          address = map2['Address'];
-          count = map2['Count'];
+          name = map2['name'];
+          address = map2['address'];
+          count = map2['count'];
           codeResult = true;
         }
       });
@@ -418,8 +418,8 @@ class EntryScreenState extends State<EntryScreen> {
   void submitService(String code, BuildContext context) async {
     await checkCode(code);
     if (codeResult) {
-      print(serviceFlats);
-      print(nameService);
+      print("Flats: $serviceFlats");
+      print("Namee: $nameService");
       addServiceData(code, context);
     } else {
       _showToast(mContext, "Code not valid");
@@ -430,6 +430,7 @@ class EntryScreenState extends State<EntryScreen> {
     int time = DateTime.now().millisecondsSinceEpoch;
 
     _showToast(mContext, "Code Verified!");
+    print(codeType);
 
     if (codeType == 1) {
       databaseReference

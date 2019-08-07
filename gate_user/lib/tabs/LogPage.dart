@@ -94,10 +94,10 @@ class LogPageState extends State<LogPage> {
     map.forEach((key, value) {
       Map<dynamic, dynamic> map1 = value;
       print(map1);
-      nameList.add(map1['Name']);
-      countList.add(map1['Count']);
+      nameList.add(map1['name']);
+      countList.add(map1['count']);
       timeList.add(key);
-      exitTimeList.add(map1['ExitTime']);
+      exitTimeList.add(map1['exitTime']);
     });
     finalList.add(nameList);
     finalList.add(countList);

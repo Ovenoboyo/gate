@@ -118,9 +118,9 @@ class LogScreenState extends State<LogScreen> {
         flatList.add(key);
         timeList.add(key1);
         Map<dynamic, dynamic> map2 = value1;
-        nameList.add(map2['Name']);
-        countList.add(map2['Count']);
-        exitTimeList.add(map2['ExitTime']);
+        nameList.add(map2['name']);
+        countList.add(map2['count']);
+        exitTimeList.add(map2['exitTime']);
       });
     });
     finalList.add(flatList);
@@ -143,7 +143,7 @@ class LogScreenState extends State<LogScreen> {
       map1.forEach((key1, value1) {
         nameList.add(key);
         timeList.add(key1);
-        exitTimeList.add(value1['ExitTime']);
+        exitTimeList.add(value1['exitTime']);
       });
     });
     finalList.add(nameList);

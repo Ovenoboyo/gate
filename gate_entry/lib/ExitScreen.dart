@@ -96,11 +96,11 @@ class ExitScreenState extends State<ExitScreen> {
 
     if (flat == "Service") {
       databaseReference.child("ServiceEntry").child(name).child(timestamp).set({
-        'ExitTime': DateTime.now().millisecondsSinceEpoch.toString(),
+        'exitTime': DateTime.now().millisecondsSinceEpoch.toString(),
       });
     } else {
       databaseReference.child("Data").child(flat).child(timestamp).set({
-        'ExitTime': DateTime.now().millisecondsSinceEpoch.toString(),
+        'exitTime': DateTime.now().millisecondsSinceEpoch.toString(),
       });
     }
 

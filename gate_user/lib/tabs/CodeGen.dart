@@ -133,7 +133,7 @@ class CodeGenState extends State<CodeGen> {
     databaseReference
         .child("UserCodes")
         .child(code)
-        .set({'Name': name, 'Count': count, 'Address': flat});
+        .set({'name': name, 'count': count, 'address': flat});
     _showDialog(context, code);
   }
 
@@ -170,7 +170,7 @@ class CodeGenState extends State<CodeGen> {
   }
 
   void copyToClipboard(String code) {
-    Clipboard.setData(ClipboardData(text: code));.then((result) {
+    Clipboard.setData(ClipboardData(text: code)).then((result) {
       final snackBar = SnackBar(
         content: Text('Copied to Clipboard'),
         action: SnackBarAction(

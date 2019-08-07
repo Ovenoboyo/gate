@@ -110,13 +110,7 @@ class _HomePageState extends State<HomePage> {
     _checkEmailVerification();
     return new Scaffold(
         appBar: new AppBar(
-          title: new Text('Flutter login demo'),
-          actions: <Widget>[
-            new FlatButton(
-                child: new Text('Logout',
-                    style: new TextStyle(fontSize: 17.0, color: Colors.white)),
-                onPressed: _signOut)
-          ],
+          title: new Text('Gate Entry')
         ),
         body: Center(
           // Center is a layout widget. It takes a single child and positions it
@@ -139,7 +133,10 @@ class _HomePageState extends State<HomePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               new RaisedButton(
-                child: Text("Add Entry"),
+                color: Colors.blue,
+                elevation: 5.0,
+                shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)),
+                child: Text("Add Entry", style: new TextStyle(fontSize: 20.0, color: Colors.white)),
                 onPressed: () {
                   Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) {
                     return new EntryScreen();
@@ -147,17 +144,23 @@ class _HomePageState extends State<HomePage> {
                 },
               ),
               new RaisedButton(
-                  child: Text("Logs"),
-                  onPressed: () {
-                    Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) {
-                      return new LogScreen();
-                    }));
-                  }),
-              new RaisedButton(
-                  child: Text("Exit"),
+                  color: Colors.blue,
+                  elevation: 5.0,
+                  shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)),
+                  child: Text("Add Exit", style: new TextStyle(fontSize: 20.0, color: Colors.white)),
                   onPressed: () {
                     Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) {
                       return new ExitScreen();
+                    }));
+                  }),
+              new RaisedButton(
+                  color: Colors.red,
+                  elevation: 5.0,
+                  shape: new RoundedRectangleBorder(borderRadius: new BorderRadius.circular(30.0)),
+                  child: Text("Logs", style: new TextStyle(fontSize: 20.0, color: Colors.white)),
+                  onPressed: () {
+                    Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) {
+                      return new LogScreen();
                     }));
                   }),
             ],
