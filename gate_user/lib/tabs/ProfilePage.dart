@@ -4,7 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:transparent_image/transparent_image.dart';
 
-String username, userid, useremail, userphotourl;
+String username = "Loading...", userid= "Loading...", useremail="Loading...", userphotourl="Loading...";
 
 class ProfilePage extends StatefulWidget {
   ProfilePageState createState() => new ProfilePageState();
@@ -30,7 +30,11 @@ class ProfilePageState extends State<ProfilePage> {
   Future<void> inputData() async {
     final FirebaseUser user = await firebaseAuth.currentUser();
     uid = user.uid;
-    name = user.displayName;
+    if (user.displayName != null) {
+      name = user.displayName;
+    } else {
+      name = "No Name";
+    }
     email = user.email;
   }
 
@@ -42,9 +46,6 @@ class ProfilePageState extends State<ProfilePage> {
    print(userphotourl);
     return new MaterialApp(
       home: new Scaffold(
-        appBar: new AppBar(
-          title: new Text("Profile"),
-        ),
         body: new Container(
           alignment: Alignment.center,
           child: new Column(
