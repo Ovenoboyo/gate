@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#008577</color>
+    <color name="colorPrimaryDark">#00574B</color>
+    <color name="colorAccent">#D81B60</color>
+
+    <color name="text_dark">@android:color/white</color> <!-- Primary text color -->
+    <color name="about_background">@android:color/black</color> <!-- Primary dark -->
+    <color name="about_dark_background">@android:color/black</color> <!-- Primary light (Floating dialogs) -->
+    <color name="outline">@android:color/darker_gray</color>
+</resources>

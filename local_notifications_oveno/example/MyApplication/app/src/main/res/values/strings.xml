@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">My Application</string>
+
+    <!-- Selinux -->
+    <string name="selinux_status">SELinux status</string>
+    <string name="selinux_status_disabled">Disabled</string>
+    <string name="selinux_status_permissive">Permissive</string>
+    <string name="selinux_status_enforcing">Enforcing</string>
+
+    <!-- About phone cards -->
+    <string name="device">Device Model</string>
+    <string name="status">Status</string>
+    <string name="android_ver">Android Version</string>
+    <string name="custom_ver">Pearl Version</string>
+    <string name="selinux">SeLinux Status</string>
+    <string name="maintainer">Maintainer</string>
+    <string name="cpu">CPU</string>
+    <string name="unknown">Unknown</string>
+    <string name="storage">Storage</string>
+    <string name="status_default">Phone number, etc.</string>
+</resources>
