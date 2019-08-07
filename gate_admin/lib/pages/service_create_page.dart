@@ -53,7 +53,8 @@ class ServiceCreatePageState extends State<ServiceCreatePage> {
   }
 
   Widget _showNameInput() {
-    return Padding(
+    return Container(
+        margin: const EdgeInsets.only(top: 20.0),
       padding: const EdgeInsets.fromLTRB(5.0, 0.0, 0.0, 5.0),
         child: new TextField(
           textAlign: TextAlign.center,
@@ -71,6 +72,7 @@ class ServiceCreatePageState extends State<ServiceCreatePage> {
 
   Widget _showFlatList() {
     return new Container(
+        margin: const EdgeInsets.only(top: 5.0),
       padding: const EdgeInsets.fromLTRB(5.0, 10.0, 10.0, 5.0),
       child: new ListView.builder(
           shrinkWrap: true,
@@ -82,34 +84,37 @@ class ServiceCreatePageState extends State<ServiceCreatePage> {
   }
 
   Widget flatListItem(TextEditingController controllerWing, TextEditingController controllerHouse) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        new Expanded(
-          child: new TextField(
-            textAlign: TextAlign.center,
-            decoration: new InputDecoration(hintText: "Wing",
-                icon: new Icon(
-                  Icons.hotel,
-                  color: Colors.grey,
-                )),
-            textCapitalization: TextCapitalization.characters,
-            inputFormatters:[
-              LengthLimitingTextInputFormatter(1),
-            ],
-            controller: controllerWing,
+    return new Container(
+        margin: const EdgeInsets.only(top: 20.0),
+      child: new Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          new Expanded(
+            child: new TextField(
+              textAlign: TextAlign.center,
+              decoration: new InputDecoration(hintText: "Wing",
+                  icon: new Icon(
+                    Icons.hotel,
+                    color: Colors.grey,
+                  )),
+              textCapitalization: TextCapitalization.characters,
+              inputFormatters:[
+                LengthLimitingTextInputFormatter(1),
+              ],
+              controller: controllerWing,
+            ),
           ),
-        ),
-        new Expanded(
-          child: new TextField(
-            textAlign: TextAlign.center,
-            decoration: new InputDecoration(hintText: "House Number"),
-            controller: controllerHouse,
-            keyboardType: TextInputType.number,
-          ),
-        )
-      ],
+          new Expanded(
+            child: new TextField(
+              textAlign: TextAlign.center,
+              decoration: new InputDecoration(hintText: "House Number"),
+              controller: controllerHouse,
+              keyboardType: TextInputType.number,
+            ),
+          )
+        ],
+      )
     );
   }
 
@@ -193,10 +198,10 @@ class ServiceCreatePageState extends State<ServiceCreatePage> {
 
   void _removeCount(){
     setState(() {
-      if(count > 0){
+      if(count > 1){
         count--;
       }else{
-        count = 0;
+        count = 1;
       }
     });
   }
