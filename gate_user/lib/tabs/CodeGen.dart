@@ -1,9 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
 import 'package:random_string/random_string.dart';
-import 'package:clipboard_manager/clipboard_manager.dart';
 import 'package:gate_user/pages/home_page.dart';
 
 class CodeGen extends StatefulWidget {
@@ -171,7 +170,7 @@ class CodeGenState extends State<CodeGen> {
   }
 
   void copyToClipboard(String code) {
-    ClipboardManager.copyToClipBoard(code).then((result) {
+    Clipboard.setData(ClipboardData(text: code));.then((result) {
       final snackBar = SnackBar(
         content: Text('Copied to Clipboard'),
         action: SnackBarAction(
