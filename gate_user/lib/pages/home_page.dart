@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:gate_user/tabs/CodeGen.dart';
+import 'package:gate_user/tabs/ProfilePage.dart';
 import 'dart:async';
 import 'login_signup_page.dart';
 import 'package:gate_user/services/authentication.dart';
@@ -55,7 +56,7 @@ class _HomePageState extends State<HomePage> {
     print(widget.userId);
     _children.add(LogPage(userid: widget.userId));
     _children.add(CodeGen(userid: widget.userId));
-    _children.add(LogPage(userid: widget.userId));
+    _children.add(ProfilePage());
   }
 
   Future<void> getUID() async {

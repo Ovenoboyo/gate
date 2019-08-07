@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gate_admin/services/authentication.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -5,7 +6,7 @@ import 'package:firebase_database/firebase_database.dart';
 class LoginSignUpPage extends StatefulWidget {
   LoginSignUpPage({this.auth, this.onSignedIn, this.formMode, this.flatUser});
 
-  final BaseAuth auth;
+  final Auth auth;
   final VoidCallback onSignedIn;
   final FormMode formMode;
   final bool flatUser;
@@ -20,7 +21,7 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
   final _formKey = new GlobalKey<FormState>();
   final databaseReference = FirebaseDatabase.instance.reference();
 
-  String _email;
+  String _email, _name;
   String _password;
   String _errorMessage;
   String _wing, _house;
@@ -52,7 +53,12 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
           userId = await widget.auth.signIn(_email, _password);
           print('Signed in: $userId');
         } else {
-          userId = await widget.auth.signUp(_email, _password);
+          UserUpdateInfo _updateData= new UserUpdateInfo();
+          _updateData.displayName = _name;
+          userId = await widget.auth.signUpUser(_email, _password).then((user) async {
+            await user.updateProfile(_updateData);
+            await user.reload();
+          });
           widget.auth.sendEmailVerification();
           _showVerifyEmailSentDialog();
           print('Signed up user: $userId');
@@ -144,6 +150,7 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
             children: <Widget>[
               _showLogo(),
               _showEmailInput(),
+              _formMode == FormMode.SIGNUP ? _showNameInput() : new Container(),
               new Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: <Widget>[
@@ -230,6 +237,25 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
     } else {
       return new Container();
     }
+  }
+
+  Widget _showNameInput() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(0.0, 15.0, 0.0, 0.0),
+      child: new TextFormField(
+        maxLines: 1,
+        keyboardType: TextInputType.text,
+        autofocus: false,
+        decoration: new InputDecoration(
+            hintText: 'Display Name',
+            icon: new Icon(
+              Icons.person,
+              color: Colors.grey,
+            )),
+        validator: (value) => value.isEmpty ? 'Name can\'t be empty' : null,
+        onSaved: (value) => _name = value,
+      ),
+    );
   }
 
   Widget _showEmailInput() {
