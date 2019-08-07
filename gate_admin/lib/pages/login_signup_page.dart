@@ -55,10 +55,7 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
         } else {
           UserUpdateInfo _updateData= new UserUpdateInfo();
           _updateData.displayName = _name;
-          userId = await widget.auth.signUpUser(_email, _password).then((user) async {
-            await user.updateProfile(_updateData);
-            await user.reload();
-          });
+          userId = await widget.auth.signUp(_email, _password);
           widget.auth.sendEmailVerification();
           _showVerifyEmailSentDialog();
           print('Signed up user: $userId');
@@ -66,7 +63,7 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
             String address = _wing.toUpperCase()+"-"+_house;
             databaseReference
                 .child("FlatAssociates").child(address)
-                .set({userId: userId});
+                .update({userId: userId});
           }
         }
         setState(() {

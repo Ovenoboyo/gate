@@ -89,7 +89,7 @@ class _HomePageState extends State<HomePage> {
 
   void onRegisterUser() {
     Navigator.of(context).push(MaterialPageRoute(builder: (BuildContext context) {
-      return new LoginSignUpPage(auth: widget.auth, onSignedIn: _onSignedup, formMode: FormMode.SIGNUP, flatUser: true,);
+      return new LoginSignUpPage(auth: widget.auth, onSignedIn: _onSignedup, formMode: FormMode.SIGNUP, flatUser: true);
     })
     );
   }
