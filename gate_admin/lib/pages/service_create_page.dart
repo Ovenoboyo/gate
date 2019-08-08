@@ -17,6 +17,7 @@ class ServiceCreatePageState extends State<ServiceCreatePage> {
   List<TextEditingController> _countControllerWing = new List();
   List<TextEditingController> _countControllerHouse = new List();
   TextEditingController _emailController = new TextEditingController();
+  TextEditingController _phoneController = new TextEditingController();
 
   @override
   void initState() {
@@ -36,6 +37,7 @@ class ServiceCreatePageState extends State<ServiceCreatePage> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: <Widget>[
         _showNameInput(),
+        _showPhoneInput(),
         new Expanded(child:
         _showFlatList()
         ),
@@ -66,6 +68,24 @@ class ServiceCreatePageState extends State<ServiceCreatePage> {
               )
           ),
           controller: _emailController,
+        )
+    );
+  }
+
+  Widget _showPhoneInput() {
+    return Container(
+        margin: const EdgeInsets.only(top: 20.0),
+        padding: const EdgeInsets.fromLTRB(5.0, 0.0, 0.0, 5.0),
+        child: new TextField(
+          textAlign: TextAlign.center,
+          decoration: new InputDecoration(
+              hintText: 'Phone Number',
+              icon: new Icon(
+                Icons.phone_in_talk,
+                color: Colors.grey,
+              )
+          ),
+          controller: _phoneController,
         )
     );
   }
@@ -165,6 +185,7 @@ class ServiceCreatePageState extends State<ServiceCreatePage> {
 
   void _onSubmit() {
     var name = _emailController.text;
+    var phone = _phoneController.text;
     print(name);
     var code = (randomAlpha(3)+randomNumeric(3)).toUpperCase();
     Map<String, dynamic> map = new Map();
@@ -174,6 +195,7 @@ class ServiceCreatePageState extends State<ServiceCreatePage> {
           map['flat$i'] = address;
     }
     map['name'] = name;
+    map['mobile_number'] = phone;
     print(map);
     databaseReference
         .child("ServiceAssociates").child(code).update(map);
