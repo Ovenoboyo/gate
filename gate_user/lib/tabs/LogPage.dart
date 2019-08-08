@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:async/async.dart';
 import 'package:gate_user/pages/home_page.dart';
 
 class LogPage extends StatefulWidget {
@@ -17,10 +18,7 @@ class LogPage extends StatefulWidget {
 
 class LogPageState extends State<LogPage> {
   final List<String> nameList = new List();
-  final List<String> countList = new List();
-  final List<String> timeList = new List();
-  final List<String> exitTimeList = new List();
-  final List<String> flatList = new List();
+  final List<String> phoneList = new List();
 
   final databaseReference = FirebaseDatabase.instance.reference();
   final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
@@ -29,6 +27,27 @@ class LogPageState extends State<LogPage> {
 
   Color firstColor = Colors.blue;
   Color secondColor = Colors.blue[400];
+
+  PageController controller;
+  int currentpage = 0;
+
+  final AsyncMemoizer _memoizer = AsyncMemoizer();
+
+  @override
+  initState() {
+    super.initState();
+    controller = new PageController(
+      initialPage: currentpage,
+      keepPage: false,
+      viewportFraction: 0.5,
+    );
+  }
+
+  @override
+  dispose() {
+    controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,9 +64,107 @@ class LogPageState extends State<LogPage> {
         ),
       ),
       new Container(
-        child: _listBuilderVisitor(),
+        child: slider(context),
       )
     ]);
+  }
+
+  Widget slider(BuildContext context){
+    return new FutureBuilder(
+        future: _getServiceDetails(),
+        initialData: "Loading text..",
+        builder: (BuildContext context, AsyncSnapshot<Object> list) {
+          print(list);
+          if (!list.hasData) {
+            return new Center(
+            );
+          } else {
+            return new PageView.builder(
+                onPageChanged: (value) {
+                  setState(() {
+                    currentpage = value;
+                  });
+                },
+                controller: controller,
+                itemBuilder: (context, index) => sliderCard(index),
+                itemCount: nameList.length
+            );
+          }
+        });
+  }
+
+  sliderCard(int index) {
+    return new AnimatedBuilder(
+      animation: controller,
+      builder: (context, child) {
+        double value = 1.0;
+        if (controller.position.haveDimensions) {
+          value = controller.page - index;
+          value = (1 - (value.abs() * 0.5)).clamp(0.0, 1.0);
+        }
+
+        return new Center(
+          child: new SizedBox(
+            height: Curves.easeOut.transform(value) * 300,
+            width: Curves.easeOut.transform(value) * 250,
+            child: child,
+          ),
+        );
+      },
+      child:
+      new GestureDetector(
+        onTap: (){
+        print("Container clicked");
+        },
+
+        child: new Container(
+          margin: const EdgeInsets.all(4.0),
+          color: index % 2 == 0 ? Colors.blue : Colors.red,
+          child:
+              new Column(
+                children: <Widget>[
+                  new Container(
+                      margin: const EdgeInsets.only(top: 35),
+                      child: new Text(nameList[index], style: new TextStyle(fontSize: 32.0, color: Colors.white))
+                  ),
+
+                  new Container(
+                      margin: const EdgeInsets.only(top: 66),
+                    child: new Text("+91 "+ phoneList[index], style: new TextStyle(fontSize: 28.0, color: Colors.black))
+                  ),
+
+
+                ],
+              )
+        ),
+      )
+    );
+  }
+
+  Future<dynamic> _getServiceDetails() {
+    return this._memoizer.runOnce(() async {
+      await getFlat();
+      List<List<String>> finalList = new List();
+
+      nameList.clear();
+      phoneList.clear();
+
+      var data = await databaseReference.child("ServiceAssociates").once();
+      Map<dynamic, dynamic> serviceCode = data.value;
+      serviceCode.forEach((key, value) {
+        int i = 0;
+        while (value['flat$i'] != null) {
+          if ((value['flat$i'].toString()).compareTo(flat) == 0) {
+            phoneList.add(value['mobile_number'].toString());
+            nameList.add(value['name'].toString());
+          }
+          i++;
+        }
+      });
+      finalList.add(nameList);
+      finalList.add(phoneList);
+      return finalList;
+    });
   }
 
   Future<void> getUID() async {
@@ -79,156 +196,5 @@ class LogPageState extends State<LogPage> {
       String formatted = formatter.format(date);
       return formatted;
     }
-  }
-
-  Future<List<List<String>>> _getValuesVisitor() async {
-    await getFlat();
-    List<List<String>> finalList = new List();
-    nameList.clear();
-    countList.clear();
-    timeList.clear();
-    exitTimeList.clear();
-    var data = await databaseReference.child("Data").child(flat).once();
-    print("here1");
-    Map<dynamic, dynamic> map = data.value;
-    map.forEach((key, value) {
-      Map<dynamic, dynamic> map1 = value;
-      print(map1);
-      nameList.add(map1['name']);
-      countList.add(map1['count']);
-      timeList.add(key);
-      exitTimeList.add(map1['exitTime']);
-    });
-    finalList.add(nameList);
-    finalList.add(countList);
-    finalList.add(timeList);
-    finalList.add(exitTimeList);
-    sortLists();
-    return finalList;
-  }
-
-  void sortLists() {
-    var tmp;
-    for (int i = 0; i < timeList.length; i++) {
-      for (int j = 0; j < i; j++) {
-        if (int.parse(timeList[j]) < int.parse(timeList[j + 1])) {
-          //timeList
-          tmp = timeList[j];
-          timeList[j] = timeList[j + 1];
-          timeList[j + 1] = tmp;
-
-          //nameList
-          tmp = nameList[j];
-          nameList[j] = nameList[j + 1];
-          nameList[j + 1] = tmp;
-
-          //exitTimeList
-          tmp = exitTimeList[j];
-          exitTimeList[j] = exitTimeList[j + 1];
-          exitTimeList[j + 1] = tmp;
-        }
-      }
-    }
-    print(timeList);
-  }
-
-  Widget _listBuilderVisitor() {
-    return new FutureBuilder(
-        future: _getValuesVisitor(),
-        initialData: "Loading text..",
-        builder: (BuildContext context, AsyncSnapshot<Object> list) {
-          print(list);
-          if (list.connectionState == ConnectionState.waiting) {
-            return new Center(child: CircularProgressIndicator());
-          } else if (!list.hasData) {
-            return new Center(
-              child: new Text("No Data"),
-            );
-          } else {
-            return new Container(
-                padding: EdgeInsets.only(left: 0, right: 0, top: 0, bottom: 10),
-                child: new ListView.builder(
-                  itemCount: nameList.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    return new Card(
-                        child: new ExpansionTile(
-                      title: new Center(
-                          child: new Text(nameList[index],
-                              style: new TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 22))),
-                      children: <Widget>[
-                        new Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: <Widget>[
-                            new Container(
-                              padding: EdgeInsets.only(
-                                  left: 20, right: 20, top: 2, bottom: 2),
-                              child: new Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: <Widget>[
-                                  new Container(
-                                    padding: EdgeInsets.only(
-                                        left: 0, right: 20, top: 2, bottom: 2),
-                                    child: new Text("Count"),
-                                  ),
-                                  new Container(
-                                    padding: EdgeInsets.only(
-                                        left: 10, right: 0, top: 2, bottom: 2),
-                                    child: new Text(countList[index]),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            new Container(
-                              padding: EdgeInsets.only(
-                                  left: 20, right: 20, top: 2, bottom: 2),
-                              child: new Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: <Widget>[
-                                  new Container(
-                                    padding: EdgeInsets.only(
-                                        left: 0, right: 20, top: 2, bottom: 2),
-                                    child: new Text("Entry Time"),
-                                  ),
-                                  new Container(
-                                    padding: EdgeInsets.only(
-                                        left: 10, right: 0, top: 2, bottom: 2),
-                                    child:
-                                        new Text(getDateTime(timeList[index])),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            new Container(
-                              padding: EdgeInsets.only(
-                                  left: 20, right: 20, top: 2, bottom: 2),
-                              child: new Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: <Widget>[
-                                  new Container(
-                                    padding: EdgeInsets.only(
-                                        left: 0, right: 20, top: 2, bottom: 2),
-                                    child: new Text("Exit Time"),
-                                  ),
-                                  new Container(
-                                    padding: EdgeInsets.only(
-                                        left: 10, right: 0, top: 2, bottom: 2),
-                                    child: new Text(
-                                        getDateTime(exitTimeList[index])),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        )
-                      ],
-                    ));
-                  },
-                ));
-          }
-        });
   }
 }
