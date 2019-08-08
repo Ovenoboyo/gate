@@ -14,6 +14,7 @@ class ServiceCreatePageState extends State<ServiceCreatePage> {
   final databaseReference = FirebaseDatabase.instance.reference();
 
   var count = 0;
+  var _errorMessage;
   List<TextEditingController> _countControllerWing = new List();
   List<TextEditingController> _countControllerHouse = new List();
   TextEditingController _emailController = new TextEditingController();
@@ -23,6 +24,7 @@ class ServiceCreatePageState extends State<ServiceCreatePage> {
   void initState() {
     super.initState();
     _addCount();
+    _errorMessage = "";
   }
 
   @override
@@ -31,7 +33,7 @@ class ServiceCreatePageState extends State<ServiceCreatePage> {
     _countControllerWing.add(new TextEditingController());
     return new Scaffold(
         appBar: new AppBar(
-        title: new Text('Flutter login demo'),
+        title: new Text('Gate Admin'),
     ),
     body: new Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -45,6 +47,7 @@ class ServiceCreatePageState extends State<ServiceCreatePage> {
         new Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: <Widget>[
+            _showErrorMessage(),
             _showAddButton(),
             _showRemoveButton()
           ],
@@ -138,6 +141,23 @@ class ServiceCreatePageState extends State<ServiceCreatePage> {
     );
   }
 
+  Widget _showErrorMessage() {
+    if (_errorMessage.length > 0 && _errorMessage != null) {
+      return new Text(
+        _errorMessage,
+        style: TextStyle(
+            fontSize: 13.0,
+            color: Colors.red,
+            height: 1.0,
+            fontWeight: FontWeight.w300),
+      );
+    } else {
+      return new Container(
+        height: 0.0,
+      );
+    }
+  }
+
   Widget _showAddButton() {
     return new Padding(
         padding: EdgeInsets.fromLTRB(0.0, 20.0, 0.0, 20.0),
@@ -184,22 +204,33 @@ class ServiceCreatePageState extends State<ServiceCreatePage> {
   }
 
   void _onSubmit() {
+    setState(() {
+      _errorMessage = "";
+    });
     var name = _emailController.text;
     var phone = _phoneController.text;
-    print(name);
-    var code = (randomAlpha(3)+randomNumeric(3)).toUpperCase();
-    Map<String, dynamic> map = new Map();
-    for (int i = 0; i<count; i++) {
-      var address = _countControllerWing[i].text+"-"+_countControllerHouse[i].text;
-          print(address);
-          map['flat$i'] = address;
+    if (phone != null && name != null) {
+      print(name);
+      var code = (randomAlpha(3) + randomNumeric(3)).toUpperCase();
+      Map<String, dynamic> map = new Map();
+      for (int i = 0; i < count; i++) {
+        var address = _countControllerWing[i].text + "-" +
+            _countControllerHouse[i].text;
+        print(address);
+        map['flat$i'] = address;
+      }
+      map['name'] = name;
+      map['mobile_number'] = phone;
+      print(map);
+      databaseReference
+          .child("ServiceAssociates").child(code).update(map);
+      _reset();
+    } else {
+      setState(() {
+        _errorMessage = "Fields can not be empty";
+
+      });
     }
-    map['name'] = name;
-    map['mobile_number'] = phone;
-    print(map);
-    databaseReference
-        .child("ServiceAssociates").child(code).update(map);
-    _reset();
   }
 
   void _addCount(){
