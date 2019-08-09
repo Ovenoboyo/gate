@@ -40,6 +40,12 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
     return false;
   }
 
+  void _setDisplayName(String name, FirebaseUser user) async {
+      UserUpdateInfo updateUser = UserUpdateInfo();
+      updateUser.displayName = name;
+      user.updateProfile(updateUser);
+  }
+
   // Perform login or signup
   void _validateAndSubmit() async {
     setState(() {
@@ -53,12 +59,11 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
           userId = await widget.auth.signIn(_email, _password);
           print('Signed in: $userId');
         } else {
-          UserUpdateInfo _updateData= new UserUpdateInfo();
-          _updateData.displayName = _name;
-          userId = await widget.auth.signUp(_email, _password);
+          FirebaseUser user = await widget.auth.signUpUser(_email, _password);
           widget.auth.sendEmailVerification();
           _showVerifyEmailSentDialog();
-          print('Signed up user: $userId');
+          print('Signed up user: $user');
+          _setDisplayName(_name, user);
           if (widget.flatUser) {
             String address = _wing.toUpperCase()+"-"+_house;
             databaseReference
