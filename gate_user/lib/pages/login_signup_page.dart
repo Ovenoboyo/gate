@@ -83,26 +83,6 @@ class _LoginSignUpPageState extends State<LoginSignUpPage> {
     super.initState();
   }
 
-  void _changeFormToSignUp() {
-    _formKey.currentState.reset();
-    _errorMessage = "";
-    setState(() {
-      _formMode = FormMode.SIGNUP;
-    });
-  }
-
-  void _changeFormToLogin() {
-    if (widget.formMode == FormMode.SIGNUP) {
-      return null;
-    } else {
-      _formKey.currentState.reset();
-      _errorMessage = "";
-      setState(() {
-        _formMode = FormMode.LOGIN;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     _isIos = Theme.of(context).platform == TargetPlatform.iOS;

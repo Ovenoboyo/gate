@@ -1,12 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'dart:io';
-import 'package:gate_user/main.dart';
 import 'package:gate_user/pages/home_page.dart';
 import 'package:gate_user/model/swipe_button.dart';
+
+import 'constants/Strings.dart';
 
 class ApprovalScreen extends StatefulWidget {
   var name, time, flat, id;
@@ -37,7 +36,7 @@ class ApprovalScreenState extends State<ApprovalScreen> {
   @override
   void initState() {
     databaseReference
-        .child("pendingApproval")
+        .child(FirebaseMessagingConstants.pendingApproval)
         .onChildRemoved
         .listen((Event event) {
       moveScreens();
@@ -51,7 +50,7 @@ class ApprovalScreenState extends State<ApprovalScreen> {
 
   Future<bool> childExists() async {
     var data = await databaseReference
-        .child("pendingApproval")
+        .child(FirebaseMessagingConstants.pendingApproval)
         .child(widget.time)
         .once();
     if (data.value == null) {
@@ -68,14 +67,12 @@ class ApprovalScreenState extends State<ApprovalScreen> {
   }
 
   void _onPressedAccept() async {
-    final FirebaseUser user = await firebaseAuth.currentUser();
     addNotificationRequest("Approved");
     cancelNotifs();
     Navigator.of(context).pop();
   }
 
   void _onPressedDecline() async {
-    final FirebaseUser user = await firebaseAuth.currentUser();
     addNotificationRequest("Denied");
     cancelNotifs();
     Navigator.of(context).pop();
@@ -84,12 +81,12 @@ class ApprovalScreenState extends State<ApprovalScreen> {
   void addNotificationRequest(String status) {
     String time = DateTime.now().millisecondsSinceEpoch.toString();
     databaseReference
-        .child("notificationRequests")
+        .child(FirebaseMessagingConstants.notificationRequests)
         .child("to")
         .child("" + time)
         .set({
-      'statusr': status,
-      'entrynode': widget.id,
+      FirebaseMessagingConstants.status: status,
+      FirebaseMessagingConstants.id: widget.id,
     });
   }
 

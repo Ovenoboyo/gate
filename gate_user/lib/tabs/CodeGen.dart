@@ -2,13 +2,14 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:gate_user/constants/Strings.dart';
 import 'package:random_string/random_string.dart';
 import 'package:gate_user/pages/home_page.dart';
 
 class CodeGen extends StatefulWidget {
   CodeGen({this.userid});
 
-  String userid;
+  final String userid;
 
   @override
   State<StatefulWidget> createState() {
@@ -28,7 +29,6 @@ class CodeGenState extends State<CodeGen> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     getFlat();
   }
@@ -131,9 +131,9 @@ class CodeGenState extends State<CodeGen> {
   void _onSubmit(String name, String count) {
     var code = (randomNumeric(3) + randomAlpha(3)).toUpperCase();
     databaseReference
-        .child("UserCodes")
+        .child(DatabaseConstants.userCodesNode)
         .child(code)
-        .set({'name': name, 'count': count, 'address': flat});
+        .set({DatabaseConstants.name: name, DatabaseConstants.count: count, DatabaseConstants.address: flat});
     _showDialog(context, code);
   }
 

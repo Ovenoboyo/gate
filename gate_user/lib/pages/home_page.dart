@@ -2,6 +2,7 @@ import 'dart:typed_data';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:gate_user/constants/Strings.dart';
 import 'package:gate_user/tabs/CodeGen.dart';
 import 'package:gate_user/tabs/ProfilePage.dart';
 import 'dart:async';
@@ -90,6 +91,7 @@ class _HomePageState extends State<HomePage> {
     firebaseMessaging.unsubscribeFromTopic(flat);
   }
 
+  // ignore: non_constant_identifier_names
   void firebaseCloudMessaging_Listeners() {
     if (Platform.isIOS) iOS_Permission();
 
@@ -100,23 +102,23 @@ class _HomePageState extends State<HomePage> {
     firebaseMessaging.configure(
         onMessage: (Map<String, dynamic> message) async {
       print('on message $message');
-      var data = message['data'];
-      name = data['name'];
-      flat = data['flat'];
-      time = data['time'];
-      id = data['entrynode'];
-      type = data['type'];
-      print(data['type']);
+      var data = message[FirebaseMessagingConstants.data];
+      name = data[FirebaseMessagingConstants.name];
+      flat = data[FirebaseMessagingConstants.flat];
+      time = data[FirebaseMessagingConstants.time];
+      id = data[FirebaseMessagingConstants.id];
+      type = data[FirebaseMessagingConstants.type];
+      print(data[FirebaseMessagingConstants.type]);
 
       if (type == "1") {
-        pushNotification1((data['name']), (data['time']), (data['flat']));
+        pushNotification1((data[FirebaseMessagingConstants.name]), (data[FirebaseMessagingConstants.time]), (data[FirebaseMessagingConstants.flat]));
         Navigator.of(context)
             .push(MaterialPageRoute(builder: (BuildContext context) {
           return new ApprovalScreen(
-              data['name'], data['time'], data['flat'], data['entrynode']);
+              data[FirebaseMessagingConstants.name], data[FirebaseMessagingConstants.time], data[FirebaseMessagingConstants.flat], data[FirebaseMessagingConstants.id]);
         }));
       } else if (type == "2") {
-        pushNotification2((data['name']), (data['time']), (data['flat']));
+        pushNotification2((data[FirebaseMessagingConstants.name]), (data[FirebaseMessagingConstants.time]), (data[FirebaseMessagingConstants.flat]));
       }
     }, onResume: (Map<String, dynamic> message) async {
       print('on resume $message');
@@ -246,6 +248,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  // ignore: non_constant_identifier_names
   void iOS_Permission() {
     firebaseMessaging.requestNotificationPermissions(
         IosNotificationSettings(sound: true, badge: true, alert: true));

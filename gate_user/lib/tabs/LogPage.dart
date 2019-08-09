@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:gate_user/constants/Strings.dart';
 import 'package:intl/intl.dart';
 import 'package:async/async.dart';
 import 'package:gate_user/pages/home_page.dart';
@@ -156,19 +157,19 @@ class LogPageState extends State<LogPage> {
       phoneList.clear();
       serviceTypeList.clear();
 
-      var data = await databaseReference.child("ServiceAssociates").once();
+      var data = await databaseReference.child(DatabaseConstants.serviceAssociates).once();
       Map<dynamic, dynamic> serviceCode = data.value;
       serviceCode.forEach((key, value) {
         int i = 0;
-        while (value['flat$i'] != null) {
-          if ((value['flat$i'].toString()).compareTo(flat) == 0) {
-            phoneList.add(value['mobile_number'].toString());
-            nameList.add(value['name'].toString());
-            serviceTypeList.add(value['type'].toString());
-          } else if (value['flat$i'].toString().compareTo("universal") == 0) {
-            phoneList.add(value['mobile_number'].toString());
-            nameList.add(value['name'].toString());
-            serviceTypeList.add(value['type'].toString());
+        while (value[DatabaseConstants.flats+i.toString()] != null) {
+          if ((value[DatabaseConstants.flats+i.toString()].toString()).compareTo(flat) == 0) {
+            phoneList.add(value[DatabaseConstants.mobile_number].toString());
+            nameList.add(value[DatabaseConstants.name].toString());
+            serviceTypeList.add(value[DatabaseConstants.type].toString());
+          } else if (value[DatabaseConstants.flats+i.toString()].toString().compareTo("universal") == 0) {
+            phoneList.add(value[DatabaseConstants.mobile_number].toString());
+            nameList.add(value[DatabaseConstants.name].toString());
+            serviceTypeList.add(value[DatabaseConstants.type].toString());
           }
           i++;
         }
@@ -187,7 +188,7 @@ class LogPageState extends State<LogPage> {
 
   Future<void> getFlat() async {
     await getUID();
-    var data = await databaseReference.child("FlatAssociates").once();
+    var data = await databaseReference.child(DatabaseConstants.flatAssociates).once();
     Map<dynamic, dynamic> map = data.value;
     map.forEach((key, value) {
       Map<dynamic, dynamic> map1 = value;
