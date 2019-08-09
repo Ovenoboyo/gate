@@ -16,12 +16,13 @@ import 'package:intl/intl.dart';
 import 'package:gate_user/tabs/LogPage.dart';
 
 class HomePage extends StatefulWidget {
-  HomePage({Key key, this.auth, this.userId, this.onSignedOut})
+  HomePage({Key key, this.auth, this.userId, this.displayName, this.onSignedOut})
       : super(key: key);
 
   final BaseAuth auth;
   final VoidCallback onSignedOut;
   final String userId;
+  final String displayName;
 
   @override
   State<StatefulWidget> createState() => new _HomePageState();

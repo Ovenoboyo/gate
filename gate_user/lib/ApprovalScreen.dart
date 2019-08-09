@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -8,7 +9,6 @@ import 'package:gate_user/pages/home_page.dart';
 import 'package:gate_user/model/swipe_button.dart';
 
 class ApprovalScreen extends StatefulWidget {
-
   var name, time, flat, id;
 
   @override
@@ -26,9 +26,10 @@ class ApprovalScreen extends StatefulWidget {
 }
 
 class ApprovalScreenState extends State<ApprovalScreen> {
-
   final databaseReference = FirebaseDatabase.instance.reference();
-  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = new FlutterLocalNotificationsPlugin();
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      new FlutterLocalNotificationsPlugin();
+  final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
 
   Color firstColor = Colors.blue;
   Color secondColor = Colors.blue[400];
@@ -49,8 +50,10 @@ class ApprovalScreenState extends State<ApprovalScreen> {
   }
 
   Future<bool> childExists() async {
-    var data = await databaseReference.child("pendingApproval").child(
-        widget.time).once();
+    var data = await databaseReference
+        .child("pendingApproval")
+        .child(widget.time)
+        .once();
     if (data.value == null) {
       return false;
     } else {
@@ -64,30 +67,29 @@ class ApprovalScreenState extends State<ApprovalScreen> {
     }
   }
 
-  void _onPressedAccept() {
+  void _onPressedAccept() async {
+    final FirebaseUser user = await firebaseAuth.currentUser();
     addNotificationRequest("Approved");
     cancelNotifs();
     Navigator.of(context).pop();
   }
 
-  void _onPressedDecline() {
+  void _onPressedDecline() async {
+    final FirebaseUser user = await firebaseAuth.currentUser();
     addNotificationRequest("Denied");
     cancelNotifs();
     Navigator.of(context).pop();
   }
 
   void addNotificationRequest(String status) {
-    String time = DateTime
-        .now()
-        .millisecondsSinceEpoch
-        .toString();
+    String time = DateTime.now().millisecondsSinceEpoch.toString();
     databaseReference
         .child("notificationRequests")
         .child("to")
         .child("" + time)
         .set({
       'statusr': status,
-      'entrynode': widget.id
+      'entrynode': widget.id,
     });
   }
 
@@ -112,48 +114,51 @@ class ApprovalScreenState extends State<ApprovalScreen> {
             ),
             Center(
                 child: new Column(
+              children: <Widget>[
+                new Container(
+                  margin:
+                      EdgeInsets.only(left: 10, right: 10, top: 20, bottom: 10),
+                  child: new Text(widget.flat,
+                      style: new TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white)),
+                ),
+                new Container(
+                  margin:
+                      EdgeInsets.only(left: 10, right: 10, top: 10, bottom: 50),
+                  child: new Text(widget.name + " is requesting approval",
+                      style: new TextStyle(color: Colors.white)),
+                ),
+                new Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: <Widget>[
-                    new Container(
-                      margin: EdgeInsets.only(
-                          left: 10, right: 10, top: 20, bottom: 10),
-                      child: new Text(widget.flat, style: new TextStyle(
-                          fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
-                    ),
-                    new Container(
-                      margin: EdgeInsets.only(
-                          left: 10, right: 10, top: 10, bottom: 50),
-                      child: new Text(widget.name + " is requesting approval", style: new TextStyle(color: Colors.white)),
-                    ),
-
-                    new Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: <Widget>[
-                        Expanded(
-                        child: SwipeButton(
-                          thumb: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: <Widget>[
-                              Align(widthFactor: 0.33, child: Icon(Icons.radio_button_unchecked)),
-                            ],
-                          ),
-                          content: Center(
-                            child: Text(''),
-                          ),
-                          onChanged: (result) {
-                            if (result == SwipePosition.SwipeLeft) {
-                              _onPressedDecline();
-                            } else if( result == SwipePosition.SwipeRight) {
-                              _onPressedAccept();
-                            }
-                          },
+                    Expanded(
+                      child: SwipeButton(
+                        thumb: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: <Widget>[
+                            Align(
+                                widthFactor: 0.33,
+                                child: Icon(Icons.radio_button_unchecked)),
+                          ],
                         ),
-                        )
-                      ],
+                        content: Center(
+                          child: Text(''),
+                        ),
+                        onChanged: (result) {
+                          if (result == SwipePosition.SwipeLeft) {
+                            _onPressedDecline();
+                          } else if (result == SwipePosition.SwipeRight) {
+                            _onPressedAccept();
+                          }
+                        },
+                      ),
                     )
                   ],
                 )
-            )
-
+              ],
+            ))
           ],
         ));
   }

@@ -19,6 +19,7 @@ class LogPage extends StatefulWidget {
 class LogPageState extends State<LogPage> {
   final List<String> nameList = new List();
   final List<String> phoneList = new List();
+  final List<String> serviceTypeList = new List();
 
   final databaseReference = FirebaseDatabase.instance.reference();
   final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
@@ -133,6 +134,11 @@ class LogPageState extends State<LogPage> {
                     child: new Text("+91 "+ phoneList[index], style: new TextStyle(fontSize: 28.0, color: Colors.black))
                   ),
 
+                  new Container(
+                      margin: const EdgeInsets.only(top: 66),
+                      child: new Text(serviceTypeList[index], style: new TextStyle(fontSize: 28.0, color: Colors.white))
+                  ),
+
 
                 ],
               )
@@ -148,6 +154,7 @@ class LogPageState extends State<LogPage> {
 
       nameList.clear();
       phoneList.clear();
+      serviceTypeList.clear();
 
       var data = await databaseReference.child("ServiceAssociates").once();
       Map<dynamic, dynamic> serviceCode = data.value;
@@ -157,12 +164,18 @@ class LogPageState extends State<LogPage> {
           if ((value['flat$i'].toString()).compareTo(flat) == 0) {
             phoneList.add(value['mobile_number'].toString());
             nameList.add(value['name'].toString());
+            serviceTypeList.add(value['type'].toString());
+          } else if (value['flat$i'].toString().compareTo("universal") == 0) {
+            phoneList.add(value['mobile_number'].toString());
+            nameList.add(value['name'].toString());
+            serviceTypeList.add(value['type'].toString());
           }
           i++;
         }
       });
       finalList.add(nameList);
       finalList.add(phoneList);
+      finalList.add(serviceTypeList);
       return finalList;
     });
   }
