@@ -36,10 +36,13 @@ class ApprovalScreenState extends State<ApprovalScreen> {
   @override
   void initState() {
     databaseReference
-        .child(FirebaseMessagingConstants.pendingApproval)
+        .child(DatabaseConstants.pendingApprovals)
         .onChildRemoved
         .listen((Event event) {
-      moveScreens();
+      Map<dynamic, dynamic> map = event.snapshot.value;
+          if (!map.containsKey(widget.flat)) {
+            moveScreens();
+          }
     });
     super.initState();
   }
@@ -48,10 +51,14 @@ class ApprovalScreenState extends State<ApprovalScreen> {
     await flutterLocalNotificationsPlugin.cancelAll();
   }
 
+  void removePendingApprovals() async {
+     await databaseReference.child(DatabaseConstants.pendingApprovals).child(widget.flat).remove();
+  }
+
   Future<bool> childExists() async {
     var data = await databaseReference
-        .child(FirebaseMessagingConstants.pendingApproval)
-        .child(widget.time)
+        .child(DatabaseConstants.pendingApprovals)
+        .child(widget.flat)
         .once();
     if (data.value == null) {
       return false;
@@ -69,24 +76,27 @@ class ApprovalScreenState extends State<ApprovalScreen> {
   void _onPressedAccept() async {
     addNotificationRequest("Approved");
     cancelNotifs();
+    removePendingApprovals();
     Navigator.of(context).pop();
   }
 
   void _onPressedDecline() async {
     addNotificationRequest("Denied");
     cancelNotifs();
+    removePendingApprovals();
     Navigator.of(context).pop();
   }
 
   void addNotificationRequest(String status) {
     String time = DateTime.now().millisecondsSinceEpoch.toString();
     databaseReference
-        .child(FirebaseMessagingConstants.notificationRequests)
+        .child(DatabaseConstants.notificationRequests)
         .child("to")
         .child("" + time)
         .set({
-      FirebaseMessagingConstants.status: status,
-      FirebaseMessagingConstants.id: widget.id,
+      DatabaseConstants.status: status,
+      DatabaseConstants.id: widget.id,
+      DatabaseConstants.flats: widget.flat,
     });
   }
 

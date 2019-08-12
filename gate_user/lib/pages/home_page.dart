@@ -9,9 +9,7 @@ import 'dart:async';
 import 'login_signup_page.dart';
 import 'package:gate_user/services/authentication.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'dart:io';
 import 'package:gate_user/ApprovalScreen.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 import 'package:gate_user/tabs/LogPage.dart';
@@ -41,7 +39,8 @@ class _HomePageState extends State<HomePage> {
   FirebaseMessaging firebaseMessaging = new FirebaseMessaging();
 
   var vibrationPattern = Int64List(4);
-  var name, time, flat, id, userid, type;
+
+  String flat = "";
 
   Color firstColor = Color(0xFFF47D15);
   Color secondColor = Color(0xFFEF772C);
@@ -54,7 +53,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     fcmSubscribe();
-    firebaseCloudMessaging_Listeners();
+    firebase_Listeners();
     print(widget.userId);
     _children.add(LogPage(userid: widget.userId));
     _children.add(CodeGen(userid: widget.userId));
@@ -81,6 +80,45 @@ class _HomePageState extends State<HomePage> {
     //print(flat);
   }
 
+  void firebase_Listeners() async {
+    var data = await databaseReference.child(DatabaseConstants.pendingApprovals).once();
+    Map<dynamic, dynamic> map = data.value;
+    map.forEach((key, value) {
+      if (key == flat) {
+        var name = map[key][DatabaseConstants.name];
+        var time = map[key][DatabaseConstants.time];
+        var flat = key;
+        var id = map[key][DatabaseConstants.id];
+        Navigator.of(context)
+            .push(MaterialPageRoute(builder: (BuildContext context) {
+          return new ApprovalScreen(
+              name, time, flat, id);
+        }));
+      }
+    });
+
+
+    // ignore: cancel_subscriptions
+    databaseReference.child("PendingApprovals").onChildAdded.listen((event) {
+      print("test "+ event.snapshot.value.toString());
+      Map<dynamic, dynamic> map = event.snapshot.value;
+
+      map.forEach((key, value) {
+        if (key == flat) {
+          var name = map[key][DatabaseConstants.name];
+          var time = map[key][DatabaseConstants.time];
+          var flat = key;
+          var id = map[key][DatabaseConstants.id];
+          Navigator.of(context)
+              .push(MaterialPageRoute(builder: (BuildContext context) {
+            return new ApprovalScreen(
+                name, time, flat, id);
+          }));
+        }
+      });
+    });
+  }
+
   void fcmSubscribe() async {
     await confirmFlat();
     firebaseMessaging.subscribeToTopic(flat);
@@ -92,69 +130,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   // ignore: non_constant_identifier_names
-  void firebaseCloudMessaging_Listeners() {
-    if (Platform.isIOS) iOS_Permission();
-
-    firebaseMessaging.getToken().then((token) {
-      print(token);
-    });
-
-    firebaseMessaging.configure(
-        onMessage: (Map<String, dynamic> message) async {
-      print('on message $message');
-      var data = message[FirebaseMessagingConstants.data];
-      name = data[FirebaseMessagingConstants.name];
-      flat = data[FirebaseMessagingConstants.flat];
-      time = data[FirebaseMessagingConstants.time];
-      id = data[FirebaseMessagingConstants.id];
-      type = data[FirebaseMessagingConstants.type];
-      print(data[FirebaseMessagingConstants.type]);
-
-      if (type == "1") {
-        pushNotification1((data[FirebaseMessagingConstants.name]), (data[FirebaseMessagingConstants.time]), (data[FirebaseMessagingConstants.flat]));
-        Navigator.of(context)
-            .push(MaterialPageRoute(builder: (BuildContext context) {
-          return new ApprovalScreen(
-              data[FirebaseMessagingConstants.name], data[FirebaseMessagingConstants.time], data[FirebaseMessagingConstants.flat], data[FirebaseMessagingConstants.id]);
-        }));
-      } else if (type == "2") {
-        pushNotification2((data[FirebaseMessagingConstants.name]), (data[FirebaseMessagingConstants.time]), (data[FirebaseMessagingConstants.flat]));
-      }
-    }, onResume: (Map<String, dynamic> message) async {
-      print('on resume $message');
-    }, onLaunch: (Map<String, dynamic> message) async {
-      print('on launch $message');
-    });
-  }
-
-  Future onDidReceiveLocalNotification(
-      int i, String title, String body, String payload) async {
-    // display a dialog with the notification details, tap ok to go to another page
-    showDialog(
-      context: context,
-      builder: (BuildContext context) => new CupertinoAlertDialog(
-            title: new Text(title),
-            content: new Text(body),
-            actions: [
-              CupertinoDialogAction(
-                isDefaultAction: true,
-                child: new Text('Ok'),
-                onPressed: () async {
-                  Navigator.of(context, rootNavigator: true).pop();
-                  await Navigator.push(
-                    context,
-                    new MaterialPageRoute(
-                      builder: (context) =>
-                          new ApprovalScreen(name, time, flat, id),
-                    ),
-                  );
-                },
-              )
-            ],
-          ),
-    );
-  }
-
   String getDateTime(String val) {
     if (val.isEmpty) {
       return val;
@@ -164,98 +139,6 @@ class _HomePageState extends State<HomePage> {
       String formatted = formatter.format(date);
       return formatted;
     }
-  }
-
-  pushNotification1(String name, String time, String flat) async {
-    vibrationPattern[0] = 0;
-    vibrationPattern[1] = 1000;
-    vibrationPattern[2] = 5000;
-    vibrationPattern[3] = 2000;
-    FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-        new FlutterLocalNotificationsPlugin();
-// initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
-    var initializationSettingsAndroid =
-        new AndroidInitializationSettings('@mipmap/ic_launcher');
-    var initializationSettingsIOS = new IOSInitializationSettings(
-        onDidReceiveLocalNotification: onDidReceiveLocalNotification);
-    var initializationSettings = new InitializationSettings(
-        initializationSettingsAndroid, initializationSettingsIOS);
-    flutterLocalNotificationsPlugin.initialize(initializationSettings,
-        onSelectNotification: onSelectNotification);
-
-    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-        'org.sahil.gupte.gate_user.HeadsUpChannel',
-        'Visitor Entry',
-        'Only for Headsup',
-        importance: Importance.High,
-        priority: Priority.High,
-        ticker: '$name Needs Approval',
-        ongoing: true,
-        autoCancel: false,
-        vibrationPattern: vibrationPattern);
-    var iOSPlatformChannelSpecifics = IOSNotificationDetails();
-    var platformChannelSpecifics = NotificationDetails(
-        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
-    await flutterLocalNotificationsPlugin.show(
-        0,
-        flat,
-        name + " is requesting approval at " + getDateTime(time),
-        platformChannelSpecifics,
-        payload: 'item x');
-  }
-
-  pushNotification2(String name, String time, String flat) async {
-    FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-        new FlutterLocalNotificationsPlugin();
-// initialise the plugin. app_icon needs to be a added as a drawable resource to the Android head project
-    var initializationSettingsAndroid =
-        new AndroidInitializationSettings('@mipmap/ic_launcher');
-    var initializationSettingsIOS = new IOSInitializationSettings(
-        onDidReceiveLocalNotification: onDidReceiveLocalNotification);
-    var initializationSettings = new InitializationSettings(
-        initializationSettingsAndroid, initializationSettingsIOS);
-    flutterLocalNotificationsPlugin.initialize(initializationSettings);
-
-    var androidPlatformChannelSpecifics = AndroidNotificationDetails(
-        'org.sahil.gupte.gate_user.normalChannel',
-        'Service Entry',
-        'Only for normal',
-        importance: Importance.Default,
-        priority: Priority.Default,
-        ticker: '$name Service',
-        autoCancel: false);
-    var iOSPlatformChannelSpecifics = IOSNotificationDetails();
-    var platformChannelSpecifics = NotificationDetails(
-        androidPlatformChannelSpecifics, iOSPlatformChannelSpecifics);
-    await flutterLocalNotificationsPlugin.show(
-        0,
-        flat,
-        name + " has entered the premises at " + getDateTime(time),
-        platformChannelSpecifics,
-        payload: 'item x');
-  }
-
-  Future onSelectNotification(String payload) async {
-    if (payload != null) {
-      debugPrint('notification payload: ' + payload);
-    }
-    Navigator.popUntil(
-        context, ModalRoute.withName(Navigator.defaultRouteName));
-    await Navigator.push(
-      context,
-      new MaterialPageRoute(
-          builder: (context) => new ApprovalScreen(name, time, flat, id)),
-    );
-  }
-
-  // ignore: non_constant_identifier_names
-  void iOS_Permission() {
-    firebaseMessaging.requestNotificationPermissions(
-        IosNotificationSettings(sound: true, badge: true, alert: true));
-    firebaseMessaging.onIosSettingsRegistered
-        .listen((IosNotificationSettings settings) {
-      print("Settings registered: $settings");
-    });
   }
 
   void _checkEmailVerification() async {
