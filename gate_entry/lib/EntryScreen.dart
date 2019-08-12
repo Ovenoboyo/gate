@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -36,12 +34,12 @@ class EntryScreenState extends State<EntryScreen> {
   var submitted = false;
   var codeResult, codeType;
   final FirebaseAuth firebaseAuth = FirebaseAuth.instance;
-
   var id;
 
   @override
   void initState() {
     super.initState();
+    submitted = false;
     _formMode = FormMode1.VISITOR;
     fcmSubscribe();
   }
@@ -76,10 +74,11 @@ class EntryScreenState extends State<EntryScreen> {
       var data = message['data'];
       print(data['statusr']);
       _approval = data['statusr'];
+      var address = data['flat'];
       if (_approval == "Approved") {
         addData(address);
         Navigator.of(context).pop();
-        _showDialog(context);
+        _showDialog(context, address);
         await new Future.delayed(const Duration(seconds: 3));
         Navigator.of(context).pop();
         _approval = "Waiting...";
@@ -87,7 +86,7 @@ class EntryScreenState extends State<EntryScreen> {
         fcmUnSubscribe();
       } else if (_approval == "Denied") {
         Navigator.of(context).pop();
-        _showDialog(context);
+        _showDialog(context, address);
         await new Future.delayed(const Duration(seconds: 3));
         Navigator.of(context).pop();
         _approval = "Waiting...";
@@ -117,8 +116,8 @@ class EntryScreenState extends State<EntryScreen> {
     });
   }
 
-  void removePendingApproval() {
-    databaseReference.child("PendingApproval").child("" + time).remove();
+  void removePendingApproval(String address) {
+    databaseReference.child("PendingApprovals").child(address).remove();
   }
 
   void addNotificationRequestVisitor(String name, String address) {
@@ -314,7 +313,7 @@ class EntryScreenState extends State<EntryScreen> {
 
   void addData(String address) {
     String time = DateTime.now().millisecondsSinceEpoch.toString();
-    removePendingApproval();
+    removePendingApproval(address);
     addPendingExit(name, address, time);
     databaseReference
         .child("Data")
@@ -332,7 +331,7 @@ class EntryScreenState extends State<EntryScreen> {
     return false;
   }
 
-  bool submitVisitor(String nameVal, String addressVal0, String addressVal1, String countVal, BuildContext context) {
+  submitVisitor(String nameVal, String addressVal0, String addressVal1, String countVal, BuildContext context) {
     time = DateTime.now().millisecondsSinceEpoch.toString();
     if (_validateAndSave()) {
       if (submitted) {
@@ -352,12 +351,13 @@ class EntryScreenState extends State<EntryScreen> {
               if (address == data) {
                 addNotificationRequestVisitor(name, address);
                 addPendingApproval(name, address);
-                _showDialog(context);
+                _showDialog(context, address);
                 return true;
               }
             }
           }
           _showToast(context, "Invalid Flat");
+          return false;
         });
       }
       return false;
@@ -471,7 +471,7 @@ class EntryScreenState extends State<EntryScreen> {
     return false;
   }
 
-  void _showDialog(BuildContext context) {
+  void _showDialog(BuildContext context, String address) {
     fcmSubscribe();
     firebaseCloudMessaging_Listeners();
     showDialog(
@@ -482,17 +482,19 @@ class EntryScreenState extends State<EntryScreen> {
           title: new Text("Awaiting Approval..."),
           content: new Text('$_approval'),
           actions: <Widget>[
-            new FlatButton(onPressed: dialogDismiss, child: new Text("Cancel"))
+            new FlatButton(onPressed: () {
+              dialogDismiss(address);
+            }, child: new Text("Cancel"))
           ],
         );
       },
     );
   }
 
-  void dialogDismiss() {
+  void dialogDismiss(String address) {
     submitted = false;
     Navigator.of(context).pop();
-    removePendingApproval();
+    removePendingApproval(address);
     setState(() {});
   }
 
